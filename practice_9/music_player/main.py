@@ -4,7 +4,7 @@ import os
 pygame.init()
 pygame.mixer.init()
 
-music_folder = r'C:\Users\amang\OneDrive\Рабочий стол\pp hw\Practice_9\music_player\music'
+music_folder = r'C:\Users\amang\Desktop\py\practice_9\music_player\music'
 songs = [os.path.join(music_folder, f) for f in os.listdir(music_folder) 
         if f.endswith(('.mp3', '.wav'))]
 
