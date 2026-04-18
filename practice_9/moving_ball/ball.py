@@ -1,4 +1,5 @@
 import pygame
+import os
 
 pygame.init()
 screen = pygame.display.set_mode((1200, 700))
@@ -7,7 +8,9 @@ RED = (255, 0, 0)
 
 done = False
 
-
+base = r'C:\Users\amang\Pictures\Screenshots'
+image_surface = pygame.image.load(os.path.join(base, 'football.png')).convert_alpha()
+resized_image = pygame.transform.scale(image_surface, (1200, 700))
 
 clock = pygame.time.Clock()
 
@@ -33,8 +36,11 @@ while not done:
     if keys[pygame.K_RIGHT]:
         if (circle_start_w < 1162):
             circle_start_w += 20
-    
     screen.fill(WHITE)
+
+    image_rect = resized_image.get_rect()
+    image_rect.center = (600, 340)
+    screen.blit(resized_image, image_rect)
     pygame.draw.circle(screen, RED, (circle_start_w, circle_start_h), 25)
     pygame.display.flip()
     clock.tick(60)  
