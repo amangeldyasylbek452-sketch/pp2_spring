@@ -6,7 +6,7 @@ pygame.init()
 screen = pygame.display.set_mode((1200, 700))
 WHITE = (255, 255, 255)
 
-base = r'C:\Users\amang\OneDrive\Рабочий стол\pp hw\Practice_9\mickeys_clock\images'
+base = r'C:\Users\amang\Desktop\py\practice_9\mickeys_clock\images'
 image_surface = pygame.image.load(os.path.join(base, 'clock.png')).convert_alpha()
 mickey      = pygame.image.load(os.path.join(base, 'mUmrP.png')).convert_alpha()
 hand_l      = pygame.image.load(os.path.join(base, 'hand_left_centered.png')).convert_alpha()
