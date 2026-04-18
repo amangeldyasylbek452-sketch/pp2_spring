@@ -8,14 +8,14 @@ WHITE = (255, 255, 255)
 
 base = r'C:\Users\amang\Desktop\py\practice_9\mickeys_clock\images'
 image_surface = pygame.image.load(os.path.join(base, 'clock.png')).convert_alpha()
-mickey      = pygame.image.load(os.path.join(base, 'mUmrP.png')).convert_alpha()
-hand_l      = pygame.image.load(os.path.join(base, 'hand_left_centered.png')).convert_alpha()
-hand_r      = pygame.image.load(os.path.join(base, 'hand_right_centered.png')).convert_alpha()
+mickey      = pygame.image.load(os.path.join(base, 'bitler.png')).convert_alpha()
+hand_l      = pygame.image.load(os.path.join(base, 'lefthand.png')).convert_alpha()
+hand_r      = pygame.image.load(os.path.join(base, 'righthand.png')).convert_alpha()
 
 resized_image = pygame.transform.scale(image_surface, (800, 600))
-res_mickey    = pygame.transform.scale(mickey, (350, 350))
-hand_l_base   = pygame.transform.scale(hand_l, (80, 150))   
-hand_r_base   = pygame.transform.scale(hand_r, (50, 200)) 
+res_mickey    = pygame.transform.scale(mickey, (150, 150))
+hand_l_base   = pygame.transform.scale(hand_l, (100, 150))   
+hand_r_base   = pygame.transform.scale(hand_r, (80, 200)) 
 
 clockc = (300, 170)
 
