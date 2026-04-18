@@ -31,7 +31,7 @@ pygame.display.set_caption("Music Player")
 clock = pygame.time.Clock()
 
 # ================== COLORS ==================
-WHITE = (255, 255, 255)
+BLUE = (0, 0, 255)
 BLACK = (0, 0, 0)
 GRAY = (180, 180, 180)
 GREEN = (0, 200, 0)
@@ -83,7 +83,7 @@ def prev_track():
 running = True
 
 while running:
-    screen.fill(WHITE)
+    screen.fill(BLUE)
 
     # ===== CURRENT TRACK INFO =====
     song_name = os.path.basename(songs[current_index])
