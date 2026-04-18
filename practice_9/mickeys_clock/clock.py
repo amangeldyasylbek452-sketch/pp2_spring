@@ -35,8 +35,8 @@ while not done:
     m = now.minute
     s = now.second
 
-    minutes_angle = -(m * 6 + s * 0.1)        # 6° per minute, smooth with seconds
-    hours_angle   = -(h * 30 + m * 0.5)       # 30° per hour, smooth with minutes
+    minutes_angle = -(m * 6 + s * 0.1)     
+    hours_angle   = -(h * 30 + m * 0.5)     
 
 
     rotated_minutes = pygame.transform.rotate(hand_l_base, minutes_angle)
@@ -46,7 +46,7 @@ while not done:
     minutes_rect = rotated_minutes.get_rect(center=(600, 340))
     hours_rect   = rotated_hours.get_rect(center=(600,340))
 
-    # Draw everything
+  
     screen.fill(WHITE)
 
     image_rect = resized_image.get_rect()
