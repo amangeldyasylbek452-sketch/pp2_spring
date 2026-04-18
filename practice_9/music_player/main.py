@@ -4,7 +4,7 @@ import os
 pygame.init()
 pygame.mixer.init()
 
-# ================== LOAD MUSIC ==================
+
 music_folder = r'C:\Users\amang\Desktop\py\practice_9\music_player\music'
 
 songs = [os.path.join(music_folder, f)
@@ -18,30 +18,29 @@ if not songs:
 
 durations = [pygame.mixer.Sound(s).get_length() for s in songs]
 
-# ================== STATE ==================
+
 current_index = 0
 is_paused = False
 current_time = 0
 
-# ================== SCREEN ==================
+
 WIDTH, HEIGHT = 1000, 600
 screen = pygame.display.set_mode((WIDTH, HEIGHT))
 pygame.display.set_caption("Music Player")
 
 clock = pygame.time.Clock()
 
-# ================== COLORS ==================
 BLUE = (0, 0, 255)
 BLACK = (0, 0, 0)
 GRAY = (180, 180, 180)
 GREEN = (0, 200, 0)
 RED = (200, 0, 0)
 
-# ================== FONTS ==================
+
 font = pygame.font.SysFont("Arial", 28)
 small_font = pygame.font.SysFont("Arial", 22)
 
-# ================== FUNCTIONS ==================
+
 def format_time(t):
     t = int(t)
     m = t // 60
@@ -79,18 +78,18 @@ def prev_track():
     current_index = (current_index - 1) % len(songs)
     play()
 
-# ================== MAIN LOOP ==================
+
 running = True
 
 while running:
     screen.fill(BLUE)
 
-    # ===== CURRENT TRACK INFO =====
+    
     song_name = os.path.basename(songs[current_index])
     title = font.render(f"Now Playing: {song_name}", True, BLACK)
     screen.blit(title, (50, 50))
 
-    # ===== PLAYLIST =====
+    
     y_offset = 120
     for i, song in enumerate(songs):
         name = os.path.basename(song)
@@ -102,7 +101,7 @@ while running:
 
         screen.blit(text, (50, y_offset + i * 30))
 
-    # ===== TIME / PROGRESS =====
+
     if pygame.mixer.music.get_busy():
         current_time = pygame.mixer.music.get_pos() / 1000
 
@@ -114,7 +113,7 @@ while running:
     time_text = font.render(f"{start} / {end}", True, BLACK)
     screen.blit(time_text, (50, 400))
 
-    # ===== PROGRESS BAR =====
+  
     bar_x1, bar_x2 = 50, 900
     bar_y = 450
 
@@ -130,7 +129,7 @@ while running:
     pygame.draw.line(screen, GREEN, (bar_x1, bar_y), (circle_x, bar_y), 6)
     pygame.draw.circle(screen, BLACK, (int(circle_x), bar_y), 8)
 
-    # ===== CONTROLS DISPLAY =====
+  
     controls = [
         "P = Play / Resume",
         "S = Stop",
@@ -143,7 +142,7 @@ while running:
         text = small_font.render(c, True, BLACK)
         screen.blit(text, (700, 50 + i * 30))
 
-    # ===== EVENTS =====
+
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             running = False
