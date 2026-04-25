@@ -51,6 +51,7 @@ shape_names = {
     "right_triangle": "Right Triangle",
     "equilateral_triangle": "Equilateral Triangle",
     "rhombus": "Rhombus",
+    "circle": "Circle",
 }
 
 
@@ -111,6 +112,13 @@ def draw_shape(surface, tool, start, end, color):
         ]
         pygame.draw.polygon(surface, color, points, 3)
 
+    elif tool == "circle":
+        rect = normalize_rect(start, end)
+        radius = min(rect.width, rect.height) // 2
+        if radius == 0:
+            return
+        center = (rect.left + rect.width // 2, rect.top + rect.height // 2)
+        pygame.draw.circle(surface, color, center, radius, 3)
 
 def draw_preview(surface, tool, start, end):
     if not start or not end or tool == "brush":
@@ -159,7 +167,7 @@ def draw_preview(surface, tool, start, end):
 
 def draw_instructions():
     instructions = [
-        "Tools: 0=Brush, 1=Square, 2=Right Triangle, 3=Equilateral Triangle, 4=Rhombus",
+        "Tools: 0=Brush, 1=Square, 2=Right Triangle, 3=Equilateral Triangle, 4=Rhombus, 5=Circle",
         "Colors: B=Blue, R=Red, G=Green, K=Black",
         "Click and drag for shapes. Drag with left mouse for freehand brush.",
         "Press C to clear canvas, ESC to quit.",
@@ -191,6 +199,8 @@ while running:
                 mode = "equilateral_triangle"
             elif event.key == pygame.K_4:
                 mode = "rhombus"
+            elif event.key == pygame.K_5:
+                mode = "circle"
             elif event.key == pygame.K_b:
                 current_color_name = "blue"
             elif event.key == pygame.K_r:
