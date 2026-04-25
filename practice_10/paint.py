@@ -87,7 +87,7 @@ def draw_shape(surface, tool, start, end, color):
             return
         x = rect.left
         y = rect.top
-        # Draw a flat base and an apex above it
+        # Draw a flat base
         p1 = (x, y + side)
         p2 = (x + side, y + side)
         apex_x = x + side / 2
@@ -226,7 +226,7 @@ while running:
     screen.fill(WHITE)
     screen.blit(canvas, (0, 0))
 
-    # Show preview while dragging a shape
+
     if drawing and mode != "brush" and start_pos:
         mouse_pos = pygame.mouse.get_pos()
         draw_preview(screen, mode, start_pos, mouse_pos)
