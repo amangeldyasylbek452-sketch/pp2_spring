@@ -260,7 +260,9 @@ def draw_game_screen(game_state):
         for strip in game_state['event_strips']:
             pygame.draw.rect(screen, (255, 120, 120), (*strip['pos'], strip['width'], 12))
 
-    if settings['sound']:
+    if game_state['event_effect']:
+        draw_text(f"Event: {game_state['event_effect'].capitalize()}", SCREEN_WIDTH - 140, 10)
+    elif settings['sound']:
         draw_text('Sound: On', SCREEN_WIDTH - 140, 10)
     else:
         draw_text('Sound: Off', SCREEN_WIDTH - 140, 10)
@@ -321,6 +323,8 @@ def reset_game():
         'active_powerup': None,
         'powerup_timer': 0,
         'powerup_bonus': 0,
+        'event_effect': None,
+        'event_timer': 0,
         'crash_protected': False,
         'timer': 0,
         'last_spawn': 0,
@@ -363,6 +367,19 @@ def handle_collision(game_state):
                     return True
                 else:
                     return True
+    for strip in list(game_state['event_strips']):
+        strip_rect = pygame.Rect(*strip['pos'], strip['width'], 12)
+        if player_rect.colliderect(strip_rect):
+            if strip['type'] == 'boost':
+                game_state['event_effect'] = 'boost'
+                game_state['event_timer'] = 3.0
+                game_state['speed'] = game_state['base_speed'] + 5
+                game_state['score'] += 25
+            elif strip['type'] == 'bump':
+                game_state['event_effect'] = 'bump'
+                game_state['event_timer'] = 1.5
+                game_state['speed'] = max(2, game_state['speed'] - 2)
+            game_state['event_strips'].remove(strip)
     return False
 
 
@@ -379,6 +396,16 @@ def update_powerups(game_state, dt):
                 game_state['speed'] = game_state['base_speed']
             game_state['active_powerup'] = None
             game_state['powerup_timer'] = 0
+
+    if game_state['event_effect']:
+        game_state['event_timer'] -= dt
+        if game_state['event_timer'] <= 0:
+            if game_state['event_effect'] == 'boost':
+                game_state['speed'] = game_state['base_speed']
+            elif game_state['event_effect'] == 'bump':
+                game_state['speed'] = max(2, game_state['base_speed'])
+            game_state['event_effect'] = None
+            game_state['event_timer'] = 0
 
 
 def collect_powerups(game_state):
@@ -412,16 +439,22 @@ def update_game(game_state, dt):
 
     game_state['score'] = int(game_state['distance'] * 0.12 + game_state['coins'] * 50 + game_state['powerup_bonus'])
     now = time.time()
-    if random.random() < params['traffic_rate'] and now - game_state['last_spawn'] > 0.4:
+    pace = 1.0 + min(game_state['distance'] / 1200.0, 1.5)
+    traffic_rate = min(0.08, params['traffic_rate'] * pace)
+    obstacle_rate = min(0.06, params['obstacle_rate'] * pace)
+    powerup_rate = min(0.032, params['powerup_rate'] * (1.0 + game_state['distance'] / 10000.0))
+    event_rate = min(0.02, 0.007 * pace)
+
+    if random.random() < traffic_rate and now - game_state['last_spawn'] > 0.4:
         spawn_traffic(game_state)
         game_state['last_spawn'] = now
-    if random.random() < params['obstacle_rate'] and now - game_state['last_obstacle'] > 0.8:
+    if random.random() < obstacle_rate and now - game_state['last_obstacle'] > 0.8:
         spawn_obstacle(game_state)
         game_state['last_obstacle'] = now
-    if random.random() < params['powerup_rate'] and now - game_state['last_powerup'] > 3.0:
+    if random.random() < powerup_rate and now - game_state['last_powerup'] > 3.0:
         spawn_powerup(game_state)
         game_state['last_powerup'] = now
-    if random.random() < 0.007 and now - game_state['last_event'] > 4.0:
+    if random.random() < event_rate and now - game_state['last_event'] > 4.0:
         spawn_event_strip(game_state)
         game_state['last_event'] = now
 

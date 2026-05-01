@@ -2,7 +2,7 @@
   {
     "name": "AS",
     "score": 539,
-    "distance": 4504
+    "distance": 4500
   },
   {
     "name": "AS",
@@ -12,31 +12,41 @@
   {
     "name": "AS",
     "score": 539,
-    "distance": 4502
+    "distance": 4506
   },
   {
     "name": "AS",
-    "score": 339,
-    "distance": 2830
+    "score": 539,
+    "distance": 4501
   },
   {
     "name": "AS",
-    "score": 301,
-    "distance": 2510
+    "score": 505,
+    "distance": 4213
   },
   {
     "name": "AS",
-    "score": 171,
-    "distance": 1430
+    "score": 416,
+    "distance": 3472
   },
   {
     "name": "AS",
-    "score": 109,
-    "distance": 910
+    "score": 413,
+    "distance": 3446
   },
   {
     "name": "AS",
-    "score": 65,
-    "distance": 545
+    "score": 393,
+    "distance": 3280
+  },
+  {
+    "name": "AS",
+    "score": 390,
+    "distance": 3250
+  },
+  {
+    "name": "AS",
+    "score": 320,
+    "distance": 2670
   }
 ]
