@@ -1,6 +1,7 @@
 import pygame
 import random
 import json
+import math
 from color_palette import *
 from config import *
 
@@ -132,8 +133,8 @@ class Food:
         self.n = random.randint(0, 2)
 
     def draw(self, screen):
-        color = self.POISON_COLOR if self.food_type == "poison" else self.NORMAL_COLORS[self.n]
-        pygame.draw.rect(screen, color, (self.pos.x * CELL, self.pos.y * CELL, CELL, CELL))
+        pygame.draw.rect(screen, colorGRAY, (self.pos.x * CELL, self.pos.y * CELL, CELL, CELL))
+        pygame.draw.rect(screen, colorWHITE, (self.pos.x * CELL, self.pos.y * CELL, CELL, CELL), 2)
 
     def generate_random_pos(self, snake_body, obstacles=None):
         self._pick_type()

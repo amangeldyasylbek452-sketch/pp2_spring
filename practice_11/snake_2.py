@@ -7,7 +7,7 @@ pygame.mixer.init()
 
 
 
-pygame.mixer.music.load("C:/Users/amang/Desktop/py/practice_10/music.mp3")
+pygame.mixer.music.load("C:/Users/amang/Desktop/py/practice_11/music.mp3")
 pygame.mixer.music.play(-1)
 
 # Screen
