@@ -1,5 +1,3 @@
-# phonebook.py - Phone Book app TSIS1
-
 import csv
 import json
 import psycopg2
