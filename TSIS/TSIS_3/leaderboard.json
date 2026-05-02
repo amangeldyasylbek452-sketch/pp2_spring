@@ -1,52 +1,8 @@
 [
-  {
-    "name": "AS",
-    "score": 539,
-    "distance": 4500
-  },
-  {
-    "name": "AS",
-    "score": 539,
-    "distance": 4500
-  },
-  {
-    "name": "AS",
-    "score": 539,
-    "distance": 4506
-  },
-  {
-    "name": "AS",
-    "score": 539,
-    "distance": 4501
-  },
-  {
-    "name": "AS",
-    "score": 505,
-    "distance": 4213
-  },
-  {
-    "name": "AS",
-    "score": 416,
-    "distance": 3472
-  },
-  {
-    "name": "AS",
-    "score": 413,
-    "distance": 3446
-  },
-  {
-    "name": "AS",
-    "score": 393,
-    "distance": 3280
-  },
-  {
-    "name": "AS",
-    "score": 390,
-    "distance": 3250
-  },
-  {
-    "name": "AS",
-    "score": 320,
-    "distance": 2670
-  }
+    {
+        "name": "as",
+        "score": 1523,
+        "distance": 1315,
+        "coins": 29
+    }
 ]
