@@ -43,6 +43,36 @@ class LevelGenerator:
             self._spawn_coin(platform)
             self._spawn_powerup(platform)
 
+        self.highest_platform_y = min(p.y for p in self.platforms)
+
+    def update(self, player_y):
+        """Generate more platforms above the player as they climb."""
+        while player_y < self.highest_platform_y + SCREEN_HEIGHT * 0.75:
+            self._spawn_extra_platforms()
+
+    def _spawn_extra_platforms(self):
+        self.highest_platform_y -= random.randint(120, 165)
+        layers = random.randint(2, 4)
+        for i in range(layers):
+            width = random.randint(140, 260)
+            x = random.randint(40, SCREEN_WIDTH - width - 40)
+            self.highest_platform_y -= random.randint(105, 145)
+            bouncy = random.random() < 0.12
+            disappearing = random.random() < 0.13
+            if random.random() < 0.22:
+                platform = MovingPlatform(
+                    x, self.highest_platform_y, width, range_px=110, speed=1.0,
+                    bouncy=bouncy, disappearing=disappearing,
+                )
+            else:
+                platform = Platform(
+                    x, self.highest_platform_y, width,
+                    bouncy=bouncy, disappearing=disappearing,
+                )
+            self.platforms.append(platform)
+            self._spawn_coin(platform)
+            self._spawn_powerup(platform)
+
     def _spawn_coin(self, platform):
         if random.random() < 0.64:
             coin_x = platform.x + platform.width * 0.5

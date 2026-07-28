@@ -3,7 +3,7 @@ import os
 import random
 import pygame
 
-from constants import FPS, SCREEN_HEIGHT, SCREEN_WIDTH
+from constants import FPS, SCREEN_HEIGHT, SCREEN_WIDTH, JUMP_VELOCITY
 from achievements import AchievementSystem
 from camera import Camera
 from collectables import Coin, PowerUp
@@ -135,6 +135,8 @@ class Game:
         self.player.update_timers(dt)
         self.player.apply_physics(dt)
 
+        self.level.update(self.player.y)
+
         landed, on_ground = self.player.resolve_platform_collisions(
             self.level.platforms, self.particles, self.sound)
         if landed is not None and hasattr(landed, "delta_x"):
@@ -150,8 +152,7 @@ class Game:
         self.lava.update(dt, slow=slow_lava)
 
         if self.lava.check_death(self.player):
-            self._end_run()
-            return
+            self._bounce_from_lava()
 
         self.camera.follow(self.player)
         self.camera.update(dt)
@@ -188,9 +189,13 @@ class Game:
                 self.sound.play("powerup")
                 self.powerups_collected += 1
 
-    def _end_run(self):
-        self.state = "game_over"
-        self.game_over_reason = "Lava"
+    def _bounce_from_lava(self):
+        self.player.y = self.lava.y - self.player.radius - 8
+        self.player.vy = JUMP_VELOCITY * 0.8
+        self.player.on_ground = False
+        self.player.powerups['shield'] = max(self.player.powerups['shield'], 1)
+        self.particles.lava_death_burst(self.player.x, self.player.y + self.player.radius)
+        self.sound.play('jump')
 
     def _draw(self, dt):
         self.ui.draw_background(self.screen)
