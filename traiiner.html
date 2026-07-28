@@ -1,0 +1,1531 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PoliQuiz — Socio-Political Knowledge Trainer</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Playfair+Display:wght@700;900&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0a0a0f;
+    --surface: #13131a;
+    --surface2: #1c1c28;
+    --border: #2a2a3e;
+    --accent: #7c6af7;
+    --accent2: #f76a8a;
+    --accent3: #6af7c8;
+    --text: #e8e8f0;
+    --muted: #7a7a9a;
+    --correct: #4ade80;
+    --wrong: #f87171;
+    --warn: #fbbf24;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* BG GRID */
+  body::before {
+    content: '';
+    position: fixed; inset: 0;
+    background-image:
+      linear-gradient(rgba(124,106,247,0.04) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(124,106,247,0.04) 1px, transparent 1px);
+    background-size: 40px 40px;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .glow-orb {
+    position: fixed;
+    border-radius: 50%;
+    filter: blur(80px);
+    opacity: 0.15;
+    pointer-events: none;
+    z-index: 0;
+  }
+  .orb1 { width: 500px; height: 500px; background: var(--accent); top: -100px; left: -100px; }
+  .orb2 { width: 400px; height: 400px; background: var(--accent2); bottom: -100px; right: -100px; }
+
+  /* HEADER */
+  header {
+    position: relative; z-index: 10;
+    padding: 2rem 2rem 1rem;
+    border-bottom: 1px solid var(--border);
+    display: flex; align-items: center; justify-content: space-between;
+    flex-wrap: wrap; gap: 1rem;
+  }
+  .logo {
+    font-family: 'Playfair Display', serif;
+    font-size: 1.8rem;
+    font-weight: 900;
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    letter-spacing: -1px;
+  }
+  .logo span { font-family: 'Space Mono', monospace; font-size: 0.7rem; font-weight: 400; color: var(--muted); display: block; letter-spacing: 3px; -webkit-text-fill-color: var(--muted); }
+
+  .stats-bar {
+    display: flex; gap: 1.5rem; align-items: center;
+  }
+  .stat {
+    text-align: center;
+  }
+  .stat-num {
+    font-family: 'Space Mono', monospace;
+    font-size: 1.4rem;
+    font-weight: 700;
+    color: var(--accent);
+  }
+  .stat-label {
+    font-size: 0.65rem;
+    color: var(--muted);
+    letter-spacing: 1px;
+    text-transform: uppercase;
+  }
+
+  /* MAIN */
+  main {
+    position: relative; z-index: 1;
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 2rem 1.5rem;
+  }
+
+  /* SCREENS */
+  .screen { display: none; animation: fadeUp 0.4s ease; }
+  .screen.active { display: block; }
+  @keyframes fadeUp {
+    from { opacity:0; transform: translateY(20px); }
+    to { opacity:1; transform: translateY(0); }
+  }
+
+  /* HOME SCREEN */
+  .home-hero {
+    text-align: center;
+    padding: 3rem 1rem;
+  }
+  .home-hero h1 {
+    font-family: 'Playfair Display', serif;
+    font-size: clamp(2.5rem, 6vw, 4.5rem);
+    font-weight: 900;
+    line-height: 1.1;
+    margin-bottom: 1rem;
+  }
+  .home-hero h1 em {
+    font-style: normal;
+    background: linear-gradient(135deg, var(--accent), var(--accent2), var(--accent3));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+  .home-hero p {
+    color: var(--muted);
+    font-size: 1.1rem;
+    max-width: 500px;
+    margin: 0 auto 2.5rem;
+    line-height: 1.7;
+  }
+
+  .topics-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+    gap: 1rem;
+    margin-top: 2rem;
+  }
+
+  .topic-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 1.5rem;
+    cursor: pointer;
+    transition: all 0.25s;
+    position: relative;
+    overflow: hidden;
+    text-align: left;
+  }
+  .topic-card::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(135deg, var(--accent) 0%, transparent 60%);
+    opacity: 0;
+    transition: opacity 0.25s;
+  }
+  .topic-card:hover { border-color: var(--accent); transform: translateY(-3px); box-shadow: 0 10px 40px rgba(124,106,247,0.2); }
+  .topic-card:hover::before { opacity: 0.06; }
+  .topic-card:hover .topic-icon { transform: scale(1.2); }
+
+  .topic-icon { font-size: 2rem; margin-bottom: 0.75rem; display: block; transition: transform 0.25s; }
+  .topic-title { font-family: 'Playfair Display', serif; font-size: 1.1rem; font-weight: 700; margin-bottom: 0.3rem; }
+  .topic-count { font-family: 'Space Mono', monospace; font-size: 0.7rem; color: var(--muted); }
+  .topic-progress-bar {
+    height: 3px;
+    background: var(--border);
+    border-radius: 99px;
+    margin-top: 1rem;
+    overflow: hidden;
+  }
+  .topic-progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--accent), var(--accent2));
+    border-radius: 99px;
+    transition: width 0.5s ease;
+  }
+
+  .mode-buttons {
+    display: flex; gap: 1rem; flex-wrap: wrap; justify-content: center; margin-bottom: 2rem;
+  }
+  .btn {
+    padding: 0.75rem 1.75rem;
+    border-radius: 10px;
+    border: none;
+    cursor: pointer;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 0.95rem;
+    font-weight: 500;
+    transition: all 0.2s;
+  }
+  .btn-primary {
+    background: linear-gradient(135deg, var(--accent), #9b6af7);
+    color: #fff;
+  }
+  .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 8px 25px rgba(124,106,247,0.4); }
+  .btn-secondary {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    color: var(--text);
+  }
+  .btn-secondary:hover { border-color: var(--accent); background: var(--surface2); }
+  .btn-outline {
+    background: transparent;
+    border: 1px solid var(--accent);
+    color: var(--accent);
+  }
+  .btn-outline:hover { background: rgba(124,106,247,0.1); }
+
+  /* QUIZ SCREEN */
+  .quiz-header {
+    display: flex; align-items: center; justify-content: space-between;
+    margin-bottom: 2rem; gap: 1rem; flex-wrap: wrap;
+  }
+  .quiz-topic-badge {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 99px;
+    padding: 0.35rem 1rem;
+    font-size: 0.8rem;
+    color: var(--accent);
+    font-family: 'Space Mono', monospace;
+    letter-spacing: 1px;
+  }
+  .progress-container { flex: 1; min-width: 150px; }
+  .progress-text {
+    font-family: 'Space Mono', monospace;
+    font-size: 0.75rem;
+    color: var(--muted);
+    margin-bottom: 0.4rem;
+  }
+  .progress-track {
+    height: 6px;
+    background: var(--border);
+    border-radius: 99px;
+    overflow: hidden;
+  }
+  .progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--accent), var(--accent2));
+    border-radius: 99px;
+    transition: width 0.4s ease;
+  }
+
+  .question-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 2rem;
+    margin-bottom: 1.5rem;
+    position: relative;
+  }
+  .q-num {
+    font-family: 'Space Mono', monospace;
+    font-size: 0.7rem;
+    color: var(--muted);
+    letter-spacing: 2px;
+    margin-bottom: 0.75rem;
+  }
+  .q-text {
+    font-family: 'Playfair Display', serif;
+    font-size: 1.3rem;
+    line-height: 1.5;
+    font-weight: 700;
+    margin-bottom: 1.5rem;
+  }
+
+  .options-grid {
+    display: grid;
+    gap: 0.75rem;
+  }
+  .option-btn {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 1rem 1.25rem;
+    text-align: left;
+    cursor: pointer;
+    color: var(--text);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 0.95rem;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    position: relative;
+    overflow: hidden;
+  }
+  .option-key {
+    font-family: 'Space Mono', monospace;
+    font-size: 0.75rem;
+    color: var(--muted);
+    background: var(--border);
+    width: 26px; height: 26px;
+    border-radius: 6px;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+    transition: all 0.2s;
+  }
+  .option-btn:hover:not(.disabled) { border-color: var(--accent); background: rgba(124,106,247,0.08); }
+  .option-btn:hover:not(.disabled) .option-key { background: var(--accent); color: #fff; }
+  .option-btn.correct { border-color: var(--correct); background: rgba(74,222,128,0.08); }
+  .option-btn.correct .option-key { background: var(--correct); color: #000; }
+  .option-btn.wrong { border-color: var(--wrong); background: rgba(248,113,113,0.08); }
+  .option-btn.wrong .option-key { background: var(--wrong); color: #fff; }
+  .option-btn.disabled { cursor: default; }
+
+  /* EXPLANATION */
+  .explanation-box {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-left: 3px solid var(--accent3);
+    border-radius: 12px;
+    padding: 1.25rem;
+    margin-top: 1rem;
+    animation: fadeUp 0.3s ease;
+  }
+  .explanation-box.show { display: block; }
+  .exp-title {
+    font-family: 'Space Mono', monospace;
+    font-size: 0.7rem;
+    color: var(--accent3);
+    letter-spacing: 2px;
+    margin-bottom: 0.6rem;
+  }
+  .exp-text {
+    font-size: 0.9rem;
+    line-height: 1.7;
+    color: var(--muted);
+  }
+  .exp-theory {
+    margin-top: 0.75rem;
+    padding-top: 0.75rem;
+    border-top: 1px solid var(--border);
+    font-size: 0.85rem;
+    color: var(--accent);
+    font-style: italic;
+  }
+
+  .quiz-actions {
+    display: flex; gap: 1rem; justify-content: flex-end; margin-top: 1.5rem;
+    flex-wrap: wrap;
+  }
+
+  /* RESULT SCREEN */
+  .result-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 24px;
+    padding: 3rem 2rem;
+    text-align: center;
+    max-width: 600px;
+    margin: 0 auto;
+  }
+  .result-score {
+    font-family: 'Space Mono', monospace;
+    font-size: 5rem;
+    font-weight: 700;
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    line-height: 1;
+    margin-bottom: 0.5rem;
+  }
+  .result-label {
+    font-family: 'Playfair Display', serif;
+    font-size: 1.8rem;
+    margin-bottom: 0.5rem;
+  }
+  .result-sub { color: var(--muted); margin-bottom: 2rem; }
+  .result-breakdown {
+    display: flex; justify-content: center; gap: 2rem;
+    margin-bottom: 2rem;
+  }
+  .rb-item { text-align: center; }
+  .rb-num { font-family: 'Space Mono', monospace; font-size: 1.5rem; font-weight: 700; }
+  .rb-num.g { color: var(--correct); }
+  .rb-num.r { color: var(--wrong); }
+  .rb-label { font-size: 0.75rem; color: var(--muted); text-transform: uppercase; letter-spacing: 1px; }
+
+  /* REVIEW */
+  .review-item {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 1.25rem;
+    margin-bottom: 1rem;
+  }
+  .review-item.correct { border-color: rgba(74,222,128,0.3); }
+  .review-item.wrong { border-color: rgba(248,113,113,0.3); }
+  .review-q { font-size: 0.9rem; line-height: 1.6; margin-bottom: 0.75rem; }
+  .review-answers { font-size: 0.8rem; display: flex; gap: 1rem; flex-wrap: wrap; }
+  .ra-correct { color: var(--correct); }
+  .ra-wrong { color: var(--wrong); }
+
+  /* TOPIC FILTER */
+  .filter-tabs {
+    display: flex; gap: 0.5rem; flex-wrap: wrap; margin-bottom: 1.5rem;
+  }
+  .filter-tab {
+    padding: 0.4rem 1rem;
+    border-radius: 99px;
+    border: 1px solid var(--border);
+    background: var(--surface);
+    color: var(--muted);
+    cursor: pointer;
+    font-size: 0.8rem;
+    transition: all 0.2s;
+  }
+  .filter-tab.active { border-color: var(--accent); color: var(--accent); background: rgba(124,106,247,0.1); }
+
+  .section-title {
+    font-family: 'Playfair Display', serif;
+    font-size: 2rem;
+    font-weight: 900;
+    margin-bottom: 0.5rem;
+  }
+  .section-sub { color: var(--muted); margin-bottom: 2rem; }
+
+  /* STREAK */
+  .streak-badge {
+    display: inline-flex; align-items: center; gap: 0.4rem;
+    background: rgba(251,191,36,0.15);
+    border: 1px solid rgba(251,191,36,0.3);
+    border-radius: 99px;
+    padding: 0.3rem 0.9rem;
+    font-size: 0.8rem;
+    color: var(--warn);
+    font-family: 'Space Mono', monospace;
+  }
+
+  /* Flash animation for correct */
+  @keyframes flashGreen {
+    0% { box-shadow: 0 0 0 0 rgba(74,222,128,0.5); }
+    100% { box-shadow: 0 0 0 20px rgba(74,222,128,0); }
+  }
+  .flash-correct { animation: flashGreen 0.5s ease; }
+  @keyframes flashRed {
+    0% { box-shadow: 0 0 0 0 rgba(248,113,113,0.5); }
+    100% { box-shadow: 0 0 0 20px rgba(248,113,113,0); }
+  }
+  .flash-wrong { animation: flashRed 0.5s ease; }
+
+  /* nav back */
+  .nav-back {
+    display: inline-flex; align-items: center; gap: 0.5rem;
+    color: var(--muted); font-size: 0.85rem; cursor: pointer;
+    transition: color 0.2s; background: none; border: none;
+    font-family: 'DM Sans', sans-serif; padding: 0; margin-bottom: 1.5rem;
+  }
+  .nav-back:hover { color: var(--text); }
+
+  @media (max-width: 600px) {
+    .q-text { font-size: 1.1rem; }
+    .question-card { padding: 1.25rem; }
+  }
+
+  /* confetti particles */
+  .confetti-container {
+    position: fixed; inset: 0; pointer-events: none; z-index: 100; overflow: hidden;
+  }
+  .confetti-piece {
+    position: absolute;
+    width: 8px; height: 8px;
+    border-radius: 2px;
+    animation: confettiFall linear forwards;
+  }
+  @keyframes confettiFall {
+    0% { transform: translateY(-20px) rotate(0deg); opacity: 1; }
+    100% { transform: translateY(100vh) rotate(720deg); opacity: 0; }
+  }
+</style>
+</head>
+<body>
+
+<div class="glow-orb orb1"></div>
+<div class="glow-orb orb2"></div>
+<div class="confetti-container" id="confettiContainer"></div>
+
+<header>
+  <div class="logo">
+    PoliQuiz
+    <span>SOCIO-POLITICAL KNOWLEDGE TRAINER</span>
+  </div>
+  <div class="stats-bar">
+    <div class="stat">
+      <div class="stat-num" id="totalAnswered">0</div>
+      <div class="stat-label">Answered</div>
+    </div>
+    <div class="stat">
+      <div class="stat-num" id="totalCorrect">0</div>
+      <div class="stat-label">Correct</div>
+    </div>
+    <div class="stat">
+      <div class="stat-num" id="streakDisplay">0🔥</div>
+      <div class="stat-label">Streak</div>
+    </div>
+  </div>
+</header>
+
+<main>
+
+  <!-- HOME SCREEN -->
+  <div class="screen active" id="homeScreen">
+    <div class="home-hero">
+      <h1>Master <em>Socio-Political</em><br>Knowledge</h1>
+      <p>Train with exam questions, learn the theory, and track your progress across all topics.</p>
+      <div class="mode-buttons">
+        <button class="btn btn-primary" onclick="startQuiz('all')">🎯 Full Exam Mode</button>
+        <button class="btn btn-secondary" onclick="startQuiz('random')">🎲 Random 10 Questions</button>
+        <button class="btn btn-outline" onclick="showScreen('reviewScreen')">📋 Review All Q&A</button>
+      </div>
+    </div>
+
+    <div class="section-title">Train by Topic</div>
+    <p class="section-sub">Choose a topic to focus your practice.</p>
+
+    <div class="topics-grid" id="topicsGrid"></div>
+  </div>
+
+  <!-- QUIZ SCREEN -->
+  <div class="screen" id="quizScreen">
+    <button class="nav-back" onclick="showScreen('homeScreen')">← Back to Home</button>
+    <div class="quiz-header">
+      <div class="quiz-topic-badge" id="quizTopicBadge">ALL TOPICS</div>
+      <div class="progress-container">
+        <div class="progress-text" id="progressText">Q 1 / 20</div>
+        <div class="progress-track"><div class="progress-fill" id="progressFill" style="width:0%"></div></div>
+      </div>
+      <div class="streak-badge">🔥 <span id="streakInQuiz">0</span></div>
+    </div>
+
+    <div class="question-card" id="questionCard">
+      <div class="q-num" id="qNum">QUESTION 01</div>
+      <div class="q-text" id="qText"></div>
+      <div class="options-grid" id="optionsGrid"></div>
+      <div class="explanation-box" id="explanationBox" style="display:none;">
+        <div class="exp-title">💡 EXPLANATION</div>
+        <div class="exp-text" id="expText"></div>
+        <div class="exp-theory" id="expTheory"></div>
+      </div>
+    </div>
+
+    <div class="quiz-actions">
+      <button class="btn btn-secondary" id="skipBtn" onclick="nextQuestion()">Skip →</button>
+      <button class="btn btn-primary" id="nextBtn" style="display:none;" onclick="nextQuestion()">Next Question →</button>
+    </div>
+  </div>
+
+  <!-- RESULT SCREEN -->
+  <div class="screen" id="resultScreen">
+    <div class="result-card">
+      <div class="result-score" id="resultScore">0%</div>
+      <div class="result-label" id="resultLabel">Keep Practicing!</div>
+      <div class="result-sub" id="resultSub"></div>
+      <div class="result-breakdown">
+        <div class="rb-item"><div class="rb-num g" id="resCorrect">0</div><div class="rb-label">Correct</div></div>
+        <div class="rb-item"><div class="rb-num r" id="resWrong">0</div><div class="rb-label">Wrong</div></div>
+        <div class="rb-item"><div class="rb-num" id="resTotal">0</div><div class="rb-label">Total</div></div>
+      </div>
+      <div style="display:flex;gap:1rem;flex-wrap:wrap;justify-content:center;">
+        <button class="btn btn-primary" onclick="startQuiz('all')">Try Again</button>
+        <button class="btn btn-secondary" onclick="showReview()">Review Answers</button>
+        <button class="btn btn-outline" onclick="showScreen('homeScreen')">Home</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- REVIEW SCREEN -->
+  <div class="screen" id="reviewScreen">
+    <button class="nav-back" onclick="showScreen('homeScreen')">← Back to Home</button>
+    <div class="section-title">All Questions & Answers</div>
+    <p class="section-sub">Study all questions with correct answers and explanations.</p>
+    <div class="filter-tabs" id="reviewFilter"></div>
+    <div id="reviewList"></div>
+  </div>
+
+</main>
+
+<script>
+// =====================================================
+// QUESTION BANK
+// =====================================================
+const TOPICS = {
+  'Social Problems': '🔍',
+  'Social Stratification': '📊',
+  'Political Regimes': '🏛️',
+  'Democracy & Liberalism': '🗳️',
+  'Nationalism & Nations': '🌍',
+  'Corruption': '💸',
+  'Civil Society': '🤝',
+  'Gender & Domestic Violence': '⚖️',
+  'Psychological Theories': '🧠',
+  'Power & Bureaucracy': '👔',
+};
+
+const QUESTIONS = [
+  // ---- SOCIAL PROBLEMS ----
+  {
+    id:1, topic:'Social Problems', variant:1,
+    q:"'X' is a social problem. Which of the following research questions is written from a social constructionist perspective?",
+    opts:["What harm do people suffer as a result of X?","Who or what causes X?","When did policymakers begin to pay increased attention to X?","What policy responses could be introduced to reduce X?"],
+    ans:2,
+    exp:"Social constructionism asks HOW something came to be recognised as a problem — focusing on the process of definition, not the harm or cause itself. 'When did policymakers begin to pay attention' looks at the social/political construction of the problem.",
+    theory:"Key theorist: Spector & Kitsuse (1977) — 'Constructing Social Problems'. They argue social problems are outcomes of claims-making activities."
+  },
+  {
+    id:2, topic:'Social Problems', variant:1,
+    q:"Societal actors who try to get a certain condition recognised as a social problem are known as:",
+    opts:["Problem-makers","Claims-makers","Problem-claimers","Problem-constructors"],
+    ans:1,
+    exp:"In constructionist theory, 'claims-makers' are individuals or groups who actively argue that a condition constitutes a social problem. They put the issue on the public agenda.",
+    theory:"Spector & Kitsuse's claims-making theory: social problems exist because people define them as problems and demand action."
+  },
+  {
+    id:3, topic:'Social Problems', variant:2,
+    q:"'X' is a social problem. Which of the following research questions is written from an objectivist perspective?",
+    opts:["How did X come to be defined as a social problem by society?","Who were the main actors pushing for X to be defined as a social problem?","What policy responses could be introduced to reduce X?","When did policymakers begin to pay increased attention to X?"],
+    ans:2,
+    exp:"Objectivists ask what can be DONE about the problem — they treat it as a real, measurable harm. Policy-oriented questions ('what responses could reduce X') are objectivist because they assume X is genuinely harmful.",
+    theory:"Objectivist perspective: social problems are real conditions causing measurable harm, independent of how they are perceived."
+  },
+  {
+    id:4, topic:'Social Problems', variant:'extra',
+    q:"John Spector and Malcolm Kitsuse theorised the nature of:",
+    opts:["Political regimes","Sovereignty","Corruption","Social problems"],
+    ans:3,
+    exp:"Spector and Kitsuse are the founding theorists of the social constructionist approach to social problems. Their 1977 book 'Constructing Social Problems' is the foundational text.",
+    theory:"Their theory: social problems are not objective conditions but constructed through claims-making processes."
+  },
+
+  // ---- SOCIAL STRATIFICATION ----
+  {
+    id:5, topic:'Social Stratification', variant:1,
+    q:"What was the main reason for the growth of the middle class in Western societies after 1945?",
+    opts:["Rebuilding Europe after World War II","The Industrial Revolution","The growth of the welfare state","The rapid expansion of the automobile industry"],
+    ans:0,
+    exp:"Post-WWII reconstruction created enormous demand for skilled workers, administrators, and professionals. The Marshall Plan and rebuilding efforts dramatically expanded middle-class employment.",
+    theory:"Note: Some sources emphasise welfare state growth (option C). The most commonly cited primary reason is post-war reconstruction and economic boom."
+  },
+  {
+    id:6, topic:'Social Stratification', variant:1,
+    q:"Peter Townsend pioneered the research of:",
+    opts:["Absolute poverty","Relative poverty","Income inequality","Social class"],
+    ans:1,
+    exp:"Peter Townsend developed the concept of relative poverty — being poor relative to the living standards of one's society, not just lacking basic survival needs.",
+    theory:"Townsend (1979) 'Poverty in the United Kingdom': poverty is relative deprivation — lacking resources to participate in normal society."
+  },
+  {
+    id:7, topic:'Social Stratification', variant:1,
+    q:"The Gini coefficient is a measure of:",
+    opts:["Socio-economic class","Poverty","Income inequality","Social exclusion"],
+    ans:2,
+    exp:"The Gini coefficient measures income inequality within a population. It ranges from 0 (perfect equality) to 1 (one person has all income).",
+    theory:"Developed by Corrado Gini in 1912. A Gini of 0.8 indicates very high inequality — a small elite holds most income."
+  },
+  {
+    id:8, topic:'Social Stratification', variant:2,
+    q:"A Gini coefficient of 0.8 indicates:",
+    opts:["A high level of poverty","A low level of poverty","A high level of income inequality","A low level of income inequality"],
+    ans:2,
+    exp:"0.8 on the Gini scale means extreme income inequality — close to the maximum of 1.0 where one person owns everything. This is a highly unequal society.",
+    theory:"Gini scale: 0 = perfect equality, 1 = perfect inequality. Most developed nations score 0.25–0.4."
+  },
+  {
+    id:9, topic:'Social Stratification', variant:2,
+    q:"The Erikson-Goldthorpe-Portocarero (EGP) schema operationalises social class using which variable?",
+    opts:["Level of income","Level of educational achievement","Ownership of property","Occupation"],
+    ans:3,
+    exp:"The EGP schema categorises people into social classes primarily based on occupation and employment relations — whether you are an employer, self-employed, or employee.",
+    theory:"EGP classes range from service class professionals (I-II) to unskilled workers (VII). Occupation determines class because it reflects authority and market relations."
+  },
+  {
+    id:10, topic:'Social Stratification', variant:1,
+    q:"The Lorenz curve is a graphical representation of:",
+    opts:["Inflation","Poverty","Income inequality","Social mobility"],
+    ans:2,
+    exp:"The Lorenz curve plots the cumulative share of income received by the bottom X% of the population. The area between it and the perfect equality line gives the Gini coefficient.",
+    theory:"The further the Lorenz curve bows away from the diagonal, the greater the inequality."
+  },
+
+  // ---- POLITICAL REGIMES ----
+  {
+    id:11, topic:'Political Regimes', variant:1,
+    q:"Which of the following is part of the horizontal dimension of power in a political regime?",
+    opts:["Civil liberties","Freedom of the press","Freedom of assembly","Separation of powers"],
+    ans:3,
+    exp:"The horizontal dimension refers to checks and balances BETWEEN branches of government (executive, legislative, judicial). Separation of powers is the classic example.",
+    theory:"Horizontal accountability: Agencies with authority to sanction other state bodies. Vertical accountability relates to citizens holding government accountable."
+  },
+  {
+    id:12, topic:'Political Regimes', variant:2,
+    q:"Which of the following is NOT part of the vertical dimension of power in a political regime?",
+    opts:["Civil liberties","Separation of powers","Freedom of assembly","Freedom of association"],
+    ans:1,
+    exp:"The vertical dimension involves citizens' rights to hold government accountable (civil liberties, assembly, association). Separation of powers is a HORIZONTAL mechanism — it's about checks between state institutions.",
+    theory:"Vertical = citizens → state. Horizontal = state institutions checking each other."
+  },
+  {
+    id:13, topic:'Political Regimes', variant:1,
+    q:"Which type of regime seeks to control all aspects of public and private life?",
+    opts:["Liberal democracy","Authoritarian","Totalitarian","Electoral autocracy"],
+    ans:2,
+    exp:"Totalitarian regimes go beyond authoritarian ones by attempting to control every aspect of life — ideology, culture, family, economy. Examples: Nazi Germany, Stalinist USSR.",
+    theory:"Juan Linz's distinction: authoritarianism has limited pluralism but no guiding ideology; totalitarianism has a mobilising utopian ideology."
+  },
+  {
+    id:14, topic:'Political Regimes', variant:1,
+    q:"How does Polity IV classify political regimes?",
+    opts:["-10 (full autocracy) to +10 (full democracy)","0 (no democracy) to 100 (full democracy)","1 (authoritarian) to 5 (democratic)","A to F grades"],
+    ans:0,
+    exp:"Polity IV uses a scale from -10 (hereditary monarchy / full autocracy) to +10 (consolidated democracy). Scores of 6+ are considered democracies.",
+    theory:"Polity IV dataset measures institutionalised democracy and autocracy based on executive recruitment, constraints on executives, and political competition."
+  },
+  {
+    id:15, topic:'Political Regimes', variant:2,
+    q:"What classification does Regimes of the World use to categorise regimes in its annual report?",
+    opts:["Full Democracy, Flawed Democracy, Hybrid Regime, Authoritarian Regime","-10 (full autocracy) to +10 (full democracy)","Democracy, Authoritarian, Totalitarian","Closed Autocracy, Electoral Autocracy, Electoral Democracy, Liberal Democracy"],
+    ans:3,
+    exp:"The V-Dem project's Regimes of the World index uses four categories: Closed Autocracy (no elections), Electoral Autocracy (unfair elections), Electoral Democracy (free elections but limited liberties), Liberal Democracy (full freedoms + rule of law).",
+    theory:"V-Dem (Varieties of Democracy) project based at University of Gothenburg. Uses expert codings across hundreds of indicators."
+  },
+  {
+    id:16, topic:'Political Regimes', variant:1,
+    q:"Which of the following would be considered part of the informal organization of a political regime?",
+    opts:["The constitution","Electoral law","Political institutions","Political behaviour"],
+    ans:3,
+    exp:"The informal dimension includes unwritten rules, norms, and actual political behaviour — how power really operates beyond the formal legal structures.",
+    theory:"Formal institutions = laws and constitutions. Informal = norms, customs, patronage networks, unwritten rules of the game."
+  },
+  {
+    id:17, topic:'Political Regimes', variant:2,
+    q:"Which of the following would be considered part of the informal organization of a political regime?",
+    opts:["Constitutional frameworks","Judicial bodies","Cronyism","Elected officials"],
+    ans:2,
+    exp:"Cronyism — favouring personal associates — is an informal practice that shapes how regimes actually operate, outside of formal legal structures.",
+    theory:"Neo-patrimonialism: rulers mix formal bureaucratic authority with informal personal networks, undermining formal institutions."
+  },
+  {
+    id:18, topic:'Political Regimes', variant:2,
+    q:"What do Levitsky and Way argue about the concept of competitive authoritarian regimes?",
+    opts:["They should be seen as distinct political entities rather than flawed democracies","They are declining in number","They will eventually evolve into liberal democracies","They are fundamentally unstable and short-lived"],
+    ans:0,
+    exp:"Levitsky and Way argue that competitive authoritarian regimes are a STABLE, distinct category — not democracies in transition. They have elections but the playing field is unfair.",
+    theory:"'Competitive Authoritarianism' (Levitsky & Way, 2002): regimes that use democratic institutions but undermine them systematically."
+  },
+  {
+    id:19, topic:'Political Regimes', variant:1,
+    q:"According to Levitsky and Way, what is one of the main challenges to Fukuyama's 'end of history' thesis?",
+    opts:["The persistence of stable authoritarian regimes challenges the idea of a universal trajectory","Democratic regimes are universally converging towards authoritarianism","All regimes are rapidly transitioning to liberal democracies","Political systems are increasingly becoming more similar across the globe"],
+    ans:0,
+    exp:"Fukuyama argued liberal democracy would universally triumph. Levitsky and Way show that durable autocracies persist, directly challenging this teleological view.",
+    theory:"Fukuyama's 'End of History' (1992) thesis vs. empirical evidence of authoritarian resilience and competitive authoritarianism."
+  },
+  {
+    id:20, topic:'Political Regimes', variant:1,
+    q:"The V-Dem Institute publishes data on:",
+    opts:["Political regimes","Poverty","Domestic violence","Corruption"],
+    ans:0,
+    exp:"V-Dem (Varieties of Democracy) is a major academic project that measures and publishes detailed data on political regimes worldwide.",
+    theory:"V-Dem collects data on 500+ indicators across 200 countries from 1789 to present, using expert surveys."
+  },
+  {
+    id:21, topic:'Political Regimes', variant:2,
+    q:"According to Juan Jose Linz, which of the following is NOT usually true of authoritarian regimes?",
+    opts:["Political power is concentrated in a small governing elite","There is a lack of political pluralism","They are based on a political ideology","There are restrictions on freedom of speech"],
+    ans:2,
+    exp:"Linz distinguishes authoritarian from totalitarian regimes precisely because authoritarianism lacks a guiding utopian ideology. Totalitarian regimes have strong mobilising ideologies.",
+    theory:"Linz (1975): Authoritarianism has limited pluralism, no extensive political mobilisation, and no guiding ideology — unlike totalitarianism."
+  },
+
+  // ---- DEMOCRACY & LIBERALISM ----
+  {
+    id:22, topic:'Democracy & Liberalism', variant:1,
+    q:"'Separation of powers' means that:",
+    opts:["Nations possess self-determination","The executive cannot dominate: its powers are limited by the legislature and the judiciary","There is genuine electoral competition","There are rival factions within a political elite"],
+    ans:1,
+    exp:"Separation of powers is Montesquieu's principle: executive, legislative, and judicial power should be held by separate institutions to prevent tyranny.",
+    theory:"Montesquieu's 'The Spirit of the Laws' (1748): dividing power prevents its abuse. Basis of most modern constitutional design."
+  },
+  {
+    id:23, topic:'Democracy & Liberalism', variant:2,
+    q:"'Separation of powers' means that:",
+    opts:["Nations possess self-determination","The executive's powers are limited by the legislature and the judiciary","There is genuine electoral competition","There are rival factions within a political elite"],
+    ans:1,
+    exp:"Separation of powers means no single branch (executive, legislative, judicial) can dominate. They check and balance each other.",
+    theory:"Montesquieu's principle, enshrined in the US Constitution (1787) and most liberal democratic systems."
+  },
+  {
+    id:24, topic:'Democracy & Liberalism', variant:1,
+    q:"Which of the following statements is FALSE:",
+    opts:["All liberal democracies are electoral democracies","All electoral democracies are liberal democracies","Modern representative democracy uses multi-party elections","Freedom of speech is an essential element of liberal democracy"],
+    ans:1,
+    exp:"Electoral democracies hold elections but may lack civil liberties and rule of law. Liberal democracy requires BOTH free elections AND liberal rights. So not all electoral democracies are liberal.",
+    theory:"Robert Dahl's 'polyarchy' concept and Larry Diamond's distinction between electoral and liberal democracy."
+  },
+  {
+    id:25, topic:'Democracy & Liberalism', variant:1,
+    q:"Which of the following is NOT an example of a liberal institution?",
+    opts:["The rule of law","The separation of powers","Martial law","Private property rights"],
+    ans:2,
+    exp:"Martial law suspends civil liberties and normal governance — it is the antithesis of liberal institutions which protect individual rights and limit government power.",
+    theory:"Liberal institutions protect individual freedom, property rights, due process, and constrain arbitrary government power."
+  },
+  {
+    id:26, topic:'Democracy & Liberalism', variant:2,
+    q:"Which of the following is NOT an example of a liberal institution?",
+    opts:["The rule of law","The separation of powers","Martial law","Private property rights"],
+    ans:2,
+    exp:"Martial law is an emergency suspension of normal law — it removes liberal protections and concentrates power in military/executive hands.",
+    theory:"Classical liberalism (Locke, Mill): institutions must protect individual rights against state overreach."
+  },
+  {
+    id:27, topic:'Democracy & Liberalism', variant:1,
+    q:"In liberal democracies, the phrase 'free, fair and meaningful' is used to describe ideal:",
+    opts:["Civil society","Civil liberties","Elections","Bureaucracies"],
+    ans:2,
+    exp:"Free (no coercion), fair (level playing field), and meaningful (real choice, results respected) are the three classic criteria for democratic elections.",
+    theory:"Electoral integrity standards from international organisations and democracy scholars like Robert Dahl."
+  },
+  {
+    id:28, topic:'Democracy & Liberalism', variant:1,
+    q:"When Francis Fukuyama referred to the 'end of history', he meant that:",
+    opts:["The world will eventually be destroyed by nuclear war","History has become unfashionable as an academic discipline","Liberal democracy is the final form of government for all nations","Fewer and fewer people are living under democratic regimes"],
+    ans:2,
+    exp:"Fukuyama argued in 1989-1992 that liberal democracy represented the endpoint of ideological evolution — there is no viable alternative system.",
+    theory:"Francis Fukuyama, 'The End of History and the Last Man' (1992): inspired by Hegel's idea of the end of ideological conflict."
+  },
+  {
+    id:29, topic:'Democracy & Liberalism', variant:2,
+    q:"Freedom of association is most closely related to the concept of:",
+    opts:["Free and fair elections","Civil society","Watchdog journalism","Lobbying"],
+    ans:1,
+    exp:"Freedom of association — the right to form and join organisations — is the foundation of civil society. Without it, NGOs, unions, and civic groups cannot exist.",
+    theory:"Civil society (Gramsci, Tocqueville): the space of voluntary associations between the state and the family."
+  },
+
+  // ---- NATIONALISM & NATIONS ----
+  {
+    id:30, topic:'Nationalism & Nations', variant:1,
+    q:"Which scholar argued that nationalism became a social and political necessity in modern societies, due to work becoming more technical and impersonal?",
+    opts:["Ernest Gellner","Ronald Grigor Suny","Bennedict Andersen","Albert Bandura"],
+    ans:0,
+    exp:"Ernest Gellner argued nationalism emerged from industrialisation — modern economies require a literate, mobile workforce, and nationalism provides the cultural homogeneity needed.",
+    theory:"Ernest Gellner, 'Nations and Nationalism' (1983): nationalism is a functional requirement of industrial society, not an ancient sentiment."
+  },
+  {
+    id:31, topic:'Nationalism & Nations', variant:1,
+    q:"'Imagined communities' represents a constructionist view of:",
+    opts:["Political regimes","Nations","Civil society organisations","Social problems"],
+    ans:1,
+    exp:"Benedict Anderson's 'Imagined Communities' (1983) argues nations are socially constructed — members will never meet most fellow nationals, yet imagine a shared community.",
+    theory:"Anderson: nations are imagined (limited, sovereign communities) sustained by print capitalism and shared media."
+  },
+  {
+    id:32, topic:'Nationalism & Nations', variant:1,
+    q:"Whose book was called 'The Revenge of the Past'?",
+    opts:["Alena Ledeneva","Benedict Anderson","Ernest Geller","Roland Grigor Suny"],
+    ans:3,
+    exp:"Ronald Grigor Suny's 'The Revenge of the Past' (1993) examines how nationalism and ethnic identity re-emerged after Soviet suppression.",
+    theory:"Suny argues ethnicity was not simply imposed by the Soviets but had genuine historical roots that resurfaced."
+  },
+  {
+    id:33, topic:'Nationalism & Nations', variant:1,
+    q:"Primordialism is the belief that:",
+    opts:["Nations are imagined communities","Nations have a right to self-determination","Nations have an objective, real, natural existence","Nations are a modern phenomenon that only emerged from the 18th century onwards"],
+    ans:2,
+    exp:"Primordialism holds that nations are ancient, natural, and based on deep ethnic, linguistic, or cultural ties — not modern constructs.",
+    theory:"Primordialism vs. Modernism: primordialists (van den Berghe) see nations as extensions of kinship; modernists (Gellner, Anderson) see them as recent constructs."
+  },
+  {
+    id:34, topic:'Nationalism & Nations', variant:2,
+    q:"Which of the following is NOT important in the ethnic concept of the nation?",
+    opts:["Citizenship","Ethnicity","Native language","Culture"],
+    ans:0,
+    exp:"The ethnic concept of nationhood is based on shared ancestry, language, and culture — NOT citizenship. Citizenship is a civic/legal concept, not ethnic.",
+    theory:"Civic vs. ethnic nationalism: civic nationalism (France, USA) = citizenship-based; ethnic nationalism (Germany historically) = blood/culture-based."
+  },
+  {
+    id:35, topic:'Nationalism & Nations', variant:2,
+    q:"Which of the following opinions on nations under the Soviet regime was NOT expressed by Roland Grigor Suny?",
+    opts:["The Soviet system institutionalised ethnic nations by including ethnicity as an administrative category","Soviet officials pursued a policy of 'territorialising' ethnic groups","Ethnic nationalism was one reason for the collapse of the USSR","A strong sense of national identity had existed among the peoples for hundreds of years before the USSR"],
+    ans:3,
+    exp:"Suny argues Soviet institutions CREATED stronger ethnic identities — he opposes the primordial view that ancient identities pre-existed the Soviet era unchanged.",
+    theory:"Suny's constructionist approach: Soviet policies actively constructed ethnic national identities through territorial and administrative measures."
+  },
+
+  // ---- CORRUPTION ----
+  {
+    id:36, topic:'Corruption', variant:1,
+    q:"What is a common criticism of corruption indices regarding their methodology?",
+    opts:["They contain too much detail","There is a lack of transparency in how the scores are calculated","They do not allow comparisons between different countries","Many countries in the world are not included in the indices"],
+    ans:1,
+    exp:"A major criticism of indices like the CPI is that scores are based on perceptions surveys and expert judgements, with opaque aggregation methods that are difficult to verify or replicate.",
+    theory:"Transparency International's CPI aggregates surveys but critics argue it measures perceptions of corruption, not actual corruption levels."
+  },
+  {
+    id:37, topic:'Corruption', variant:2,
+    q:"The CPI is a corruption index published by Transparency International. 'CPI' stands for:",
+    opts:["Corruption Prevalence Index","Corruption Perceptions Index","Corruption Persistence Index","Corruption Participation Index"],
+    ans:1,
+    exp:"CPI = Corruption Perceptions Index. It aggregates data from surveys of business people and country experts to measure perceived levels of public sector corruption.",
+    theory:"Transparency International publishes the CPI annually since 1995. Higher scores = less corrupt. Denmark consistently ranks #1."
+  },
+  {
+    id:38, topic:'Corruption', variant:1,
+    q:"Endemic corruption means:",
+    opts:["Corruption involving powerful players and large sums of money","Corruption involving people in low-level positions of power and small sums of money","Corruption that can be morally justified","Corruption that exists throughout the whole system"],
+    ans:3,
+    exp:"Endemic corruption means it is widespread and systemic — embedded throughout the whole political and social system, not just isolated incidents.",
+    theory:"Endemic (systemic) corruption vs. petty (small-scale) vs. grand (elite-level) corruption. When corruption is endemic, it becomes normalised."
+  },
+  {
+    id:39, topic:'Corruption', variant:1,
+    q:"Mr A promises that, in return for Mr B paying him a sum of money, he can arrange for Mr B to meet with a powerful politician. This is an example of:",
+    opts:["Extortion","Influence-peddling","Embezzlement","Fraud"],
+    ans:1,
+    exp:"Influence-peddling is selling access to power — using one's connections or position to grant others access to decision-makers in exchange for money.",
+    theory:"Types of corruption: bribery (direct payment), extortion (coerced payment), embezzlement (theft of public funds), influence-peddling (selling access)."
+  },
+  {
+    id:40, topic:'Corruption', variant:1,
+    q:"Abusing one's power to obtain money from someone using threats or intimidation is known as:",
+    opts:["Bribery","Embezzlement","Displacement of responsibility","Extortion"],
+    ans:3,
+    exp:"Extortion involves using power, threats, or coercion to force someone to pay. Unlike bribery (where the payer benefits), in extortion the victim is forced to pay.",
+    theory:"Extortion vs. bribery: in bribery, both parties benefit. In extortion, one party is coerced."
+  },
+  {
+    id:41, topic:'Corruption', variant:2,
+    q:"The Watergate scandal in the USA. President Nixon used criminal means to:",
+    opts:["Make money through kickbacks and embezzlement","Censor journalists who criticised him","Learn about the plans of his electoral opponents","Falsify election results"],
+    ans:2,
+    exp:"Watergate (1972-74): Nixon's team broke into the Democratic National Committee HQ to steal documents and plant listening devices to spy on political opponents.",
+    theory:"The scandal led to Nixon's resignation in 1974 — the only US president to resign. It transformed American attitudes to government accountability."
+  },
+  {
+    id:42, topic:'Corruption', variant:1,
+    q:"The Watergate scandal in the USA brought about the resignation of which president?",
+    opts:["John F. Kennedy","Richard Nixon","Bill Clinton","Donald Trump"],
+    ans:1,
+    exp:"Richard Nixon resigned on August 9, 1974 after it became clear he would be impeached for his involvement in covering up the Watergate break-in.",
+    theory:"The cover-up, not the break-in itself, destroyed Nixon's presidency. Key lesson: the cover-up is often worse than the crime."
+  },
+  {
+    id:43, topic:'Corruption', variant:2,
+    q:"The Tangetopoli scandal was a political corruption scandal in:",
+    opts:["Italy","Spain","Brazil","Costa Rica"],
+    ans:0,
+    exp:"Tangentopoli ('Bribesville') was a massive Italian corruption investigation in the early 1990s that brought down the entire post-war political establishment.",
+    theory:"Mani Pulite ('Clean Hands') investigation 1992-94 revealed systematic bribery between politicians and businesses, destroying the Christian Democrat and Socialist parties."
+  },
+  {
+    id:44, topic:'Corruption', variant:1,
+    q:"Sociolismo in Cuba was an example of:",
+    opts:["Social exclusion","An economy of favours","Kleptocracy","Civic nationalism"],
+    ans:1,
+    exp:"Sociolismo (from 'socio' = partner/friend) refers to Cuba's informal economy of favours — getting things done through personal networks rather than official channels.",
+    theory:"Economy of favours: informal system where goods and services circulate through personal relationships, blurring boundaries between corruption and social reciprocity."
+  },
+  {
+    id:45, topic:'Corruption', variant:2,
+    q:"In China, an individual's social network of mutually beneficial personal and business relationships is known as:",
+    opts:["Sociolismo","Songli","Guanxi","Hongbao"],
+    ans:2,
+    exp:"Guanxi (关系) refers to networks of relationships and reciprocal obligations in Chinese culture. It can facilitate both legitimate business and corrupt exchanges.",
+    theory:"Guanxi blurs boundaries between social reciprocity and corruption. Alena Ledeneva also studied similar blat networks in Soviet Russia."
+  },
+  {
+    id:46, topic:'Corruption', variant:2,
+    q:"Giving jobs and other benefits to friends, political supporters etc. is known as:",
+    opts:["Nepotism","Cronyism","Socialism","Nationalism"],
+    ans:1,
+    exp:"Cronyism is giving positions and benefits to friends and associates based on personal loyalty rather than merit. Nepotism specifically refers to favouring family members.",
+    theory:"Distinction: Nepotism = family favouritism. Cronyism = broader friend/ally favouritism. Both undermine meritocracy."
+  },
+  {
+    id:47, topic:'Corruption', variant:1,
+    q:"Government by those who seek to make personal gain at the expense of ordinary people is known as:",
+    opts:["Kleptocracy","Cronyism","Nepotism","Embezzlement"],
+    ans:0,
+    exp:"Kleptocracy ('rule by thieves') is a system where the ruling elite uses political power primarily to extract wealth for personal enrichment at public expense.",
+    theory:"Examples: Mobutu Sese Seko's Zaire, Suharto's Indonesia. The state becomes a tool for personal enrichment."
+  },
+
+  // ---- CIVIL SOCIETY ----
+  {
+    id:48, topic:'Civil Society', variant:1,
+    q:"A civil society organisation that aims to influence government policy is known as:",
+    opts:["A pressure group","An influence group","A power group","A control group"],
+    ans:0,
+    exp:"Pressure groups (interest groups) are civil society organisations that seek to influence government policy without seeking to govern themselves.",
+    theory:"Distinction: pressure groups seek influence; political parties seek power. Types: insider groups (work with government), outsider groups (public campaigns)."
+  },
+  {
+    id:49, topic:'Civil Society', variant:1,
+    q:"Which of the following tactics is likely to be used by an insider pressure group?",
+    opts:["Petitions and boycotts","Grassroots campaigns","Direct lobbying of policymakers","Street protests"],
+    ans:2,
+    exp:"Insider groups have established relationships with government and use private lobbying channels. Outsider groups lack access and use public pressure tactics.",
+    theory:"Grant's insider/outsider typology: insider groups are consulted by government; outsider groups campaign publicly to gain support."
+  },
+  {
+    id:50, topic:'Civil Society', variant:2,
+    q:"What is a primary characteristic of grassroots movements?",
+    opts:["They operate with hierarchical leadership","They rely on spontaneous support from ordinary individuals","They focus on insider lobbying","They campaign on environmental matters"],
+    ans:1,
+    exp:"Grassroots movements mobilise ordinary citizens through bottom-up organisation, not top-down direction. They derive power from mass participation.",
+    theory:"Grassroots vs. astroturfing: genuine grassroots = organic citizen mobilisation. Astroturfing = fake grassroots funded by elites."
+  },
+  {
+    id:51, topic:'Civil Society', variant:1,
+    q:"What type of civil society does China have?",
+    opts:["Only the legal conception","Only the sociological conception","Both the legal conception and the sociological conception","Neither the legal conception nor the sociological conception"],
+    ans:1,
+    exp:"China has vibrant associational life (sociological civil society) but lacks the autonomous political space for civil society to challenge the state (legal conception).",
+    theory:"Legal conception: civil society as a political sphere checking state power. Sociological: simply voluntary associations. China has the latter without the former."
+  },
+  {
+    id:52, topic:'Civil Society', variant:2,
+    q:"The Polish trade union Solidarity is a frequently-cited example of:",
+    opts:["The role of ethnic nationalism in bringing an end to communist regimes","The role of oppositional civil society in bringing an end to communist regimes","The role of infighting within ruling elites in bringing an end to communist regimes","The role of shortages of consumer goods in bringing an end to communist regimes"],
+    ans:1,
+    exp:"Solidarity (Solidarność), led by Lech Wałęsa, was a 10-million member trade union that became the opposition civil society movement that eventually ended communist rule in Poland.",
+    theory:"Civil society theory: autonomous organisations outside state control can aggregate popular opposition and challenge authoritarian regimes."
+  },
+
+  // ---- GENDER & DOMESTIC VIOLENCE ----
+  {
+    id:53, topic:'Gender & Domestic Violence', variant:1,
+    q:"IPV is a type of abuse that takes place between:",
+    opts:["Partners in a sexual relationship","Parents and children","Teachers and schoolchildren","Employers and employees"],
+    ans:0,
+    exp:"IPV = Intimate Partner Violence. It occurs between current or former romantic/sexual partners and can be physical, sexual, psychological, or financial.",
+    theory:"IPV is the most common form of gender-based violence. Women are disproportionately victims, though men can also experience it."
+  },
+  {
+    id:54, topic:'Gender & Domestic Violence', variant:1,
+    q:"Which of the following is NOT a form of coercive control?",
+    opts:["Isolating the victim (e.g. stopping them seeing family/friends)","Belittling or humiliating the victim","Neglecting the victim","Telling the victim what clothes they can wear"],
+    ans:2,
+    exp:"Neglect is a form of abuse but not specifically coercive control. Coercive control focuses on systematic patterns of manipulation, isolation, and domination.",
+    theory:"Evan Stark's concept of coercive control: a pattern of behaviour that seeks to take away the victim's liberty or freedom."
+  },
+  {
+    id:55, topic:'Gender & Domestic Violence', variant:1,
+    q:"Which of the following is NOT a form of intimate partner violence?",
+    opts:["Emotional","Sexual","Stalking","Eloping"],
+    ans:3,
+    exp:"Eloping means running away to get married — it is not a form of violence. IPV includes physical, sexual, emotional/psychological, and stalking behaviours.",
+    theory:"WHO definition of IPV: physical violence, sexual violence, psychological abuse, and controlling behaviours."
+  },
+  {
+    id:56, topic:'Gender & Domestic Violence', variant:1,
+    q:"Male authority and control over women being considered socially acceptable is known as:",
+    opts:["Patriarchal norms","Matriarchal norms","Gender-based violence","Domestic violence"],
+    ans:0,
+    exp:"Patriarchal norms are social norms that normalise male dominance and female subordination. They create conditions where controlling or violent behaviour is minimised or excused.",
+    theory:"Feminist analysis: patriarchal norms underpin domestic violence. Changing norms requires cultural change, not just legal reform."
+  },
+  {
+    id:57, topic:'Gender & Domestic Violence', variant:2,
+    q:"Bride kidnapping can be considered a form of:",
+    opts:["Gender-based violence","Corruption","Economy of favours","Social mobility"],
+    ans:0,
+    exp:"Bride kidnapping (practised in parts of Central Asia, Caucasus) involves abducting a woman to force marriage. It is a form of gender-based violence regardless of tradition.",
+    theory:"Gender-based violence: any violence directed at someone because of their gender. Includes FGM, forced marriage, honour killings, as well as domestic violence."
+  },
+
+  // ---- PSYCHOLOGICAL THEORIES ----
+  {
+    id:58, topic:'Psychological Theories', variant:1,
+    q:"Stanley Milgram's psychological experiments, where participants believed they were giving electric shocks to learners, were designed to test:",
+    opts:["Whether people would learn more quickly if they were punished for wrong answers","To what extent people would cause pain to others if they were paid for it","To what extent people enjoyed causing pain to others","To what extent people would obey authority figures"],
+    ans:3,
+    exp:"Milgram's obedience experiments (1961-62) showed that 65% of participants administered the maximum 'lethal' shock when ordered by an authority figure. Designed after the Nuremberg trials.",
+    theory:"Milgram: ordinary people can commit atrocities when commanded by legitimate authority. His 'agentic state' theory: people shift responsibility to the authority figure."
+  },
+  {
+    id:59, topic:'Psychological Theories', variant:2,
+    q:"Which psychological theory states that people repeat the behaviours they saw or experienced as a child?",
+    opts:["Social learning theory","Cognitive dissonance theory","The agency theory of obedience","Moral disengagement theory"],
+    ans:0,
+    exp:"Social learning theory (Bandura) argues people learn behaviours through observation and imitation. Children who witness violence may replicate it as adults.",
+    theory:"Albert Bandura's Bobo doll experiments (1961): children imitated aggressive behaviour they observed in adults. Basis of intergenerational violence theory."
+  },
+  {
+    id:60, topic:'Psychological Theories', variant:1,
+    q:"Which psychological theory states that people repeat the behaviours they saw or experienced as a child?",
+    opts:["Social learning theory","Cognitive dissonance theory","Social identity theory","Moral disengagement theory"],
+    ans:0,
+    exp:"Bandura's social learning theory: behaviour is learned through observation, imitation, and modelling. Children exposed to violence learn it as a conflict resolution strategy.",
+    theory:"Bandura (1977): 'Social Learning Theory'. Key mechanism: vicarious reinforcement — learning from watching others be rewarded or punished."
+  },
+  {
+    id:61, topic:'Psychological Theories', variant:2,
+    q:"The concepts of 'ingroups' and 'outgroups' form part of which psychological theory?",
+    opts:["Social identity theory","Social learning theory","Cognitive dissonance theory","Moral disengagement theory"],
+    ans:0,
+    exp:"Social identity theory (Tajfel & Turner) explains how group membership shapes self-concept. We favour our ingroup and discriminate against outgroups to maintain positive identity.",
+    theory:"Tajfel & Turner's minimal group paradigm showed people favour their group even when groups are assigned randomly. Explains prejudice and nationalism."
+  },
+  {
+    id:62, topic:'Psychological Theories', variant:1,
+    q:"Manipulating someone such that they begin to question their own perception of reality is called:",
+    opts:["Neglect","Stalking","Elopement","Gaslighting"],
+    ans:3,
+    exp:"Gaslighting is a form of psychological manipulation where the abuser makes the victim doubt their own memory, perceptions, and sanity. The term comes from the 1944 film 'Gaslight'.",
+    theory:"Gaslighting is recognised as a form of emotional abuse and coercive control. It systematically undermines the victim's confidence in their own reality."
+  },
+  {
+    id:63, topic:'Psychological Theories', variant:2,
+    q:"Manipulating someone such that they begin to question their own perception of reality is called:",
+    opts:["Neglect","Stalking","Elopement","Gaslighting"],
+    ans:3,
+    exp:"Gaslighting: named after the play/film 'Gas Light', where a husband manipulates his wife into thinking she's going insane by secretly dimming gas lights and denying it.",
+    theory:"In psychology, gaslighting is now widely recognised as a form of narcissistic abuse. Effects: confusion, anxiety, low self-esteem, dependence on abuser."
+  },
+  {
+    id:64, topic:'Psychological Theories', variant:2,
+    q:"Which type of psychological theory states that people repeat the behaviours they saw or experienced as a child?",
+    opts:["Social learning theory","Cognitive dissonance theory","Agency theory of obedience","Moral disengagement theory"],
+    ans:0,
+    exp:"Social learning theory underlies the 'cycle of violence' hypothesis — that victims of childhood abuse are at elevated risk of perpetrating or experiencing violence as adults.",
+    theory:"Note: the cycle of violence is contested — most abuse survivors do NOT become abusers. The theory must be applied carefully to avoid victim-blaming."
+  },
+
+  // ---- POWER & BUREAUCRACY ----
+  {
+    id:65, topic:'Power & Bureaucracy', variant:1,
+    q:"Which of the following is NOT a characteristic of Max Weber's ideal-type bureaucracy?",
+    opts:["Formal hierarchy","Clearly-defined rules and procedures","Promotion is on the basis of personal connections","Clear distinction between public and private spheres"],
+    ans:2,
+    exp:"Weber's ideal-type bureaucracy is a meritocracy: promotion should be based on qualifications and performance, NOT personal connections. Personal patronage is the antithesis of Weberian bureaucracy.",
+    theory:"Max Weber's ideal-type bureaucracy: hierarchy, written rules, specialisation, impersonal application of rules, merit-based careers, separation of public/private."
+  },
+  {
+    id:66, topic:'Power & Bureaucracy', variant:2,
+    q:"Which of the following is NOT a characteristic of Max Weber's ideal-type bureaucracy?",
+    opts:["Formal hierarchy","Clearly-defined rules and procedures","Promotion is on the basis of personal connections","Clear distinction between public and private spheres"],
+    ans:2,
+    exp:"In Weber's ideal type, officials are appointed based on technical qualifications and advance by merit. Nepotism and patronage represent the opposite of Weberian rationalisation.",
+    theory:"Weber contrasted modern bureaucracy with traditional patrimonial authority where positions were given based on personal loyalty to the ruler."
+  },
+  {
+    id:67, topic:'Power & Bureaucracy', variant:1,
+    q:"A nation state's external sovereignty depends on:",
+    opts:["Recognition of it by other states in the international community","The size of its army","Acceptance of the regime's legitimacy by its own citizens","The absence of systemic political corruption"],
+    ans:0,
+    exp:"External sovereignty requires recognition by other states — a state that is not recognised internationally cannot exercise full external sovereignty.",
+    theory:"Two dimensions of sovereignty: external (recognition by other states, non-interference) and internal (control over own territory and population)."
+  },
+  {
+    id:68, topic:'Power & Bureaucracy', variant:2,
+    q:"A nation state's internal sovereignty depends on:",
+    opts:["Recognition of it by other states in the international community","The size of its army","Acceptance of the regime's legitimacy by its own citizens","Membership of supranational organisations"],
+    ans:2,
+    exp:"Internal sovereignty requires legitimate authority over one's own territory and population. Legitimacy from citizens is the basis of internal sovereignty.",
+    theory:"Weber's concept of legitimacy: traditional, charismatic, and rational-legal authority. Internal sovereignty rests on the population accepting the state's right to rule."
+  },
+  {
+    id:69, topic:'Power & Bureaucracy', variant:2,
+    q:"Which of the following scholars wrote about blat in the USSR?",
+    opts:["Alena Ledeneva","John Spector and Malcolm Kitsuse","Max Weber","John Goldthorpe"],
+    ans:0,
+    exp:"Alena Ledeneva's 'Russia's Economy of Favours' (1998) is the definitive study of blat — the Soviet informal practice of exchanging favours through personal networks.",
+    theory:"Blat: using personal connections to obtain goods and services in shortage economies. Shows how informal institutions can undermine formal ones."
+  },
+  {
+    id:70, topic:'Power & Bureaucracy', variant:1,
+    q:"In context of gift-giving, 'instrumentality' means giving a gift because:",
+    opts:["You want to show the other person respect","You want to make the other person happy","You want the other person to do something for you in return","It is a cultural norm in this situation"],
+    ans:2,
+    exp:"Instrumental gift-giving is strategic — the gift is given to create obligation or obtain a favour. This contrasts with expressive giving (genuine affection) or normative giving (social obligation).",
+    theory:"Marcel Mauss 'The Gift' (1925): gifts are never free — they create obligations to reciprocate. Instrumental giving exploits this for personal gain."
+  },
+  {
+    id:71, topic:'Power & Bureaucracy', variant:2,
+    q:"In context of gift-giving, 'instrumentality' means giving a gift because:",
+    opts:["You want to show the other person respect","You want to make the other person happy","You want the other person to do something for you in return","It is a cultural norm in this situation"],
+    ans:2,
+    exp:"Instrumental gifts are means to an end — using the obligation created by gift-giving to extract a benefit. This slides into corruption when public officials are involved.",
+    theory:"The line between gift and bribe: cultural context, the relationship between giver/receiver, and whether it influences official decisions."
+  },
+  {
+    id:72, topic:'Power & Bureaucracy', variant:2,
+    q:"Which of the following scholars had a teleological view of history?",
+    opts:["Karl Marx","Francis Fukuyama","Both A and B","Neither A nor B"],
+    ans:2,
+    exp:"Both Marx (history progresses to communism) and Fukuyama (history ends with liberal democracy) have teleological views — they see history moving toward a predetermined endpoint.",
+    theory:"Teleological history: influenced by Hegel's idea that history has a rational direction. Marx = dialectical materialism toward communism. Fukuyama = liberal democratic endpoint."
+  },
+
+  // EXTRA GENERATED QUESTIONS
+  {
+    id:73, topic:'Social Problems', variant:'extra',
+    q:"According to claims-making theory, a social problem only exists when:",
+    opts:["It causes measurable harm to society","People successfully define it as a problem requiring action","Government passes legislation addressing it","Scientists provide evidence of its harmful effects"],
+    ans:1,
+    exp:"Constructionism: a condition becomes a social problem only through successful claims-making — when enough people accept that it is a problem requiring action, regardless of objective harm.",
+    theory:"Spector & Kitsuse: 'We define social problems as the activities of individuals or groups making assertions of grievances and claims with respect to some putative conditions.'"
+  },
+  {
+    id:74, topic:'Democracy & Liberalism', variant:'extra',
+    q:"Which term best describes a regime that holds competitive elections but systematically undermines civil liberties and rule of law?",
+    opts:["Liberal democracy","Totalitarian regime","Electoral autocracy","Flawed democracy"],
+    ans:2,
+    exp:"Electoral autocracy: elections are held but are neither free nor fair. The ruling party uses state resources, media control, and selective repression to maintain power.",
+    theory:"Levitsky & Way's 'competitive authoritarianism': formal democratic institutions exist but incumbents violate their rules so often and so broadly that the regime fails minimum standards of democracy."
+  },
+  {
+    id:75, topic:'Corruption', variant:'extra',
+    q:"Which of the following best describes 'petty corruption'?",
+    opts:["Corruption involving heads of state","Small-scale corruption by low-level officials in everyday interactions","Corruption in political party financing","Corruption that spans the entire political system"],
+    ans:1,
+    exp:"Petty corruption involves small bribes paid to low-level officials (police, customs, teachers, doctors) to receive services that should be provided for free.",
+    theory:"Grand corruption = elite level, large sums. Petty corruption = everyday, small-scale. Both damage trust in institutions, but petty corruption affects ordinary people most directly."
+  },
+  {
+    id:76, topic:'Nationalism & Nations', variant:'extra',
+    q:"What does Ernest Gellner mean when he says nationalism 'invents' nations?",
+    opts:["Nationalists fabricate historical documents","Nationalism creates political units that match cultural/linguistic boundaries","National identities are biologically determined","Nations have always existed but were unnamed"],
+    ans:1,
+    exp:"Gellner's provocative thesis: before industrialisation, most people identified with local communities, not nations. Nationalism created the idea that political and cultural units should coincide — and then built nations to match.",
+    theory:"'Nationalism is not the awakening of nations to self-consciousness: it invents nations where they do not exist.' — Ernest Gellner"
+  },
+  {
+    id:77, topic:'Civil Society', variant:'extra',
+    q:"Which of the following is the best definition of 'civil society'?",
+    opts:["The military and police forces of a state","The space of voluntary associations between the family and the state","All citizens who are eligible to vote","Government ministries and bureaucracies"],
+    ans:1,
+    exp:"Civil society is the realm of organised social life that is voluntary, self-generating, and largely self-supporting — occupying the space between the private sphere (family) and the state.",
+    theory:"From Hegel to Gramsci to Tocqueville: civil society is where citizens organise collectively, independent of state direction. Key for democracy and accountability."
+  },
+  {
+    id:78, topic:'Power & Bureaucracy', variant:'extra',
+    q:"Which sociologist distinguished between three types of legitimate authority: traditional, charismatic, and rational-legal?",
+    opts:["Karl Marx","Émile Durkheim","Max Weber","Talcott Parsons"],
+    ans:2,
+    exp:"Max Weber identified three ideal types of legitimate domination: traditional (based on customs), charismatic (based on exceptional personal qualities), and rational-legal (based on rules and laws).",
+    theory:"Weber's 'Economy and Society' (1922): modern states are characterised by rational-legal authority — people obey rules, not persons. Bureaucracy is the organisational form of rational-legal domination."
+  },
+  {
+    id:79, topic:'Gender & Domestic Violence', variant:'extra',
+    q:"Which of the following is a feature of coercive control that distinguishes it from other forms of domestic abuse?",
+    opts:["It always involves physical violence","It is a pattern of behaviour designed to dominate and trap the victim","It only affects women","It is only recognised in criminal law in the United States"],
+    ans:1,
+    exp:"Coercive control is distinct because it is a sustained PATTERN of behaviour — isolation, monitoring, degradation, and control — rather than isolated violent incidents. It can occur without physical violence.",
+    theory:"Evan Stark (2007) 'Coercive Control': unlike assault, coercive control deprives victims of their liberty over time. England/Wales criminalised it in 2015."
+  },
+  {
+    id:80, topic:'Psychological Theories', variant:'extra',
+    q:"Bandura's 'Bobo doll' experiments are most associated with which theory?",
+    opts:["Social identity theory","Cognitive dissonance theory","Social learning theory","Obedience to authority theory"],
+    ans:2,
+    exp:"Bandura's famous experiments showed children imitated aggressive behaviour toward an inflatable Bobo doll after watching an adult do the same. This demonstrated observational learning.",
+    theory:"Social learning theory (Bandura, 1977): behaviour is acquired through observation and reinforcement, not just direct experience. Foundation of intergenerational violence research."
+  }
+];
+
+// =====================================================
+// STATE
+// =====================================================
+let state = {
+  quizQuestions: [],
+  currentIdx: 0,
+  answered: false,
+  score: { correct: 0, wrong: 0 },
+  history: [], // {qId, userAns, correct}
+  streak: 0,
+  totalAnswered: 0,
+  totalCorrect: 0,
+  currentTopic: 'all',
+};
+
+// =====================================================
+// UTILITY
+// =====================================================
+function showScreen(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  window.scrollTo(0,0);
+}
+
+function shuffle(arr) {
+  const a = [...arr];
+  for (let i = a.length-1; i>0; i--) {
+    const j = Math.floor(Math.random()*(i+1));
+    [a[i],a[j]] = [a[j],a[i]];
+  }
+  return a;
+}
+
+function updateGlobalStats() {
+  document.getElementById('totalAnswered').textContent = state.totalAnswered;
+  document.getElementById('totalCorrect').textContent = state.totalCorrect;
+  document.getElementById('streakDisplay').textContent = state.streak + '🔥';
+  document.getElementById('streakInQuiz').textContent = state.streak;
+}
+
+// =====================================================
+// HOME
+// =====================================================
+function renderTopicsGrid() {
+  const topicNames = Object.keys(TOPICS);
+  const grid = document.getElementById('topicsGrid');
+  grid.innerHTML = '';
+  topicNames.forEach(topic => {
+    const total = QUESTIONS.filter(q => q.topic === topic).length;
+    const card = document.createElement('div');
+    card.className = 'topic-card';
+    card.innerHTML = `
+      <span class="topic-icon">${TOPICS[topic]}</span>
+      <div class="topic-title">${topic}</div>
+      <div class="topic-count">${total} QUESTIONS</div>
+      <div class="topic-progress-bar"><div class="topic-progress-fill" style="width:0%"></div></div>
+    `;
+    card.onclick = () => startQuiz(topic);
+    grid.appendChild(card);
+  });
+}
+
+// =====================================================
+// QUIZ
+// =====================================================
+function startQuiz(topic) {
+  state.currentTopic = topic;
+  state.score = { correct: 0, wrong: 0 };
+  state.history = [];
+  state.answered = false;
+
+  let pool;
+  if (topic === 'all') pool = [...QUESTIONS];
+  else if (topic === 'random') pool = shuffle(QUESTIONS).slice(0, 10);
+  else pool = QUESTIONS.filter(q => q.topic === topic);
+
+  state.quizQuestions = shuffle(pool);
+  state.currentIdx = 0;
+
+  const badge = document.getElementById('quizTopicBadge');
+  badge.textContent = topic === 'all' ? 'ALL TOPICS' : topic === 'random' ? 'RANDOM MIX' : topic.toUpperCase();
+
+  showScreen('quizScreen');
+  renderQuestion();
+}
+
+function renderQuestion() {
+  const q = state.quizQuestions[state.currentIdx];
+  const total = state.quizQuestions.length;
+  state.answered = false;
+
+  document.getElementById('qNum').textContent = `QUESTION ${String(state.currentIdx+1).padStart(2,'0')} / ${total}`;
+  document.getElementById('qText').textContent = q.q;
+  document.getElementById('progressText').textContent = `Q ${state.currentIdx+1} / ${total}`;
+  document.getElementById('progressFill').style.width = `${(state.currentIdx/total)*100}%`;
+
+  const grid = document.getElementById('optionsGrid');
+  grid.innerHTML = '';
+  const letters = ['A','B','C','D'];
+  q.opts.forEach((opt, i) => {
+    const btn = document.createElement('button');
+    btn.className = 'option-btn';
+    btn.innerHTML = `<span class="option-key">${letters[i]}</span><span>${opt}</span>`;
+    btn.onclick = () => selectAnswer(i, btn);
+    grid.appendChild(btn);
+  });
+
+  document.getElementById('explanationBox').style.display = 'none';
+  document.getElementById('nextBtn').style.display = 'none';
+  document.getElementById('skipBtn').style.display = 'inline-flex';
+}
+
+function selectAnswer(idx, btn) {
+  if (state.answered) return;
+  state.answered = true;
+  const q = state.quizQuestions[state.currentIdx];
+  const correct = q.ans;
+  const isCorrect = idx === correct;
+
+  const allBtns = document.querySelectorAll('.option-btn');
+  allBtns.forEach((b, i) => {
+    b.classList.add('disabled');
+    if (i === correct) b.classList.add('correct');
+    if (i === idx && !isCorrect) b.classList.add('wrong');
+  });
+
+  const card = document.getElementById('questionCard');
+  card.classList.add(isCorrect ? 'flash-correct' : 'flash-wrong');
+  setTimeout(() => card.classList.remove('flash-correct','flash-wrong'), 600);
+
+  if (isCorrect) {
+    state.score.correct++;
+    state.streak++;
+    state.totalCorrect++;
+    if (state.streak >= 3) launchConfetti();
+  } else {
+    state.score.wrong++;
+    state.streak = 0;
+  }
+  state.totalAnswered++;
+  state.history.push({ qId: q.id, userAns: idx, correct });
+
+  updateGlobalStats();
+
+  // Show explanation
+  const expBox = document.getElementById('explanationBox');
+  document.getElementById('expText').textContent = q.exp;
+  document.getElementById('expTheory').textContent = q.theory;
+  expBox.style.display = 'block';
+
+  document.getElementById('skipBtn').style.display = 'none';
+  document.getElementById('nextBtn').style.display = 'inline-flex';
+}
+
+function nextQuestion() {
+  state.currentIdx++;
+  if (state.currentIdx >= state.quizQuestions.length) {
+    showResult();
+  } else {
+    renderQuestion();
+  }
+}
+
+// =====================================================
+// RESULT
+// =====================================================
+function showResult() {
+  const total = state.quizQuestions.length;
+  const pct = Math.round((state.score.correct / total) * 100);
+  document.getElementById('resultScore').textContent = pct + '%';
+  document.getElementById('resCorrect').textContent = state.score.correct;
+  document.getElementById('resWrong').textContent = state.score.wrong;
+  document.getElementById('resTotal').textContent = total;
+
+  let label, sub;
+  if (pct >= 90) { label = '🏆 Excellent!'; sub = 'Outstanding performance. You clearly know this material!'; }
+  else if (pct >= 75) { label = '🎯 Well Done!'; sub = 'Strong performance. Review the questions you missed.'; }
+  else if (pct >= 60) { label = '📚 Getting There!'; sub = 'Good progress. Review explanations and try again.'; }
+  else { label = '💪 Keep Studying!'; sub = 'Read through the explanations carefully and retake the quiz.'; }
+
+  document.getElementById('resultLabel').textContent = label;
+  document.getElementById('resultSub').textContent = sub;
+  showScreen('resultScreen');
+  if (pct >= 80) launchConfetti(50);
+}
+
+function showReview() {
+  renderReview(null);
+  showScreen('reviewScreen');
+}
+
+// =====================================================
+// REVIEW
+// =====================================================
+function renderReview(filterTopic) {
+  const filter = document.getElementById('reviewFilter');
+  const list = document.getElementById('reviewList');
+
+  // Build filter tabs
+  const topics = ['All', ...Object.keys(TOPICS)];
+  filter.innerHTML = '';
+  topics.forEach(t => {
+    const tab = document.createElement('div');
+    tab.className = 'filter-tab' + ((!filterTopic && t==='All') || filterTopic===t ? ' active' : '');
+    tab.textContent = t;
+    tab.onclick = () => renderReview(t === 'All' ? null : t);
+    filter.appendChild(tab);
+  });
+
+  const qs = filterTopic ? QUESTIONS.filter(q => q.topic === filterTopic) : QUESTIONS;
+  list.innerHTML = '';
+  const letters = ['A','B','C','D'];
+  qs.forEach(q => {
+    const h = state.history.find(h => h.qId === q.id);
+    let statusClass = '';
+    if (h) statusClass = h.userAns === h.correct ? 'correct' : 'wrong';
+
+    const div = document.createElement('div');
+    div.className = 'review-item ' + statusClass;
+    div.innerHTML = `
+      <div class="q-num" style="margin-bottom:0.4rem;">${q.topic} · Q${q.id}</div>
+      <div class="review-q">${q.q}</div>
+      <div class="review-answers">
+        <span class="ra-correct">✓ ${letters[q.ans]}. ${q.opts[q.ans]}</span>
+        ${h && h.userAns !== h.correct ? `<span class="ra-wrong">✗ You chose: ${letters[h.userAns]}. ${q.opts[h.userAns]}</span>` : ''}
+      </div>
+      <div class="explanation-box" style="display:block;margin-top:0.75rem;">
+        <div class="exp-title">💡 EXPLANATION</div>
+        <div class="exp-text">${q.exp}</div>
+        <div class="exp-theory">${q.theory}</div>
+      </div>
+    `;
+    list.appendChild(div);
+  });
+}
+
+// =====================================================
+// CONFETTI
+// =====================================================
+function launchConfetti(count=30) {
+  const container = document.getElementById('confettiContainer');
+  const colors = ['#7c6af7','#f76a8a','#6af7c8','#fbbf24','#60a5fa'];
+  for (let i=0; i<count; i++) {
+    const el = document.createElement('div');
+    el.className = 'confetti-piece';
+    el.style.cssText = `
+      left: ${Math.random()*100}%;
+      background: ${colors[Math.floor(Math.random()*colors.length)]};
+      animation-duration: ${1.5+Math.random()*2}s;
+      animation-delay: ${Math.random()*0.5}s;
+      width: ${6+Math.random()*8}px;
+      height: ${6+Math.random()*8}px;
+    `;
+    container.appendChild(el);
+    setTimeout(() => el.remove(), 4000);
+  }
+}
+
+// =====================================================
+// INIT
+// =====================================================
+renderTopicsGrid();
+updateGlobalStats();
+</script>
+</body>
+</html>
