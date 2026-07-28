@@ -7,10 +7,12 @@ Player physics, jumping, power-ups, collisions.
 import math
 import pygame
 from constants import (
-    BALL_RADIUS, GRAVITY, MOVE_ACCEL, MAX_MOVE_SPEED, FRICTION, AIR_FRICTION,
-    JUMP_VELOCITY, DOUBLE_JUMP_VELOCITY, HIGH_JUMP_MULTIPLIER, MAX_FALL_SPEED,
-    COYOTE_TIME, BOUNCE_PLATFORM_MULTIPLIER, MAGNET_RADIUS,
+    BALL_RADIUS, BALL_COLOR, BALL_OUTLINE, GRAVITY, MOVE_ACCEL,
+    MAX_MOVE_SPEED, FRICTION, AIR_FRICTION, JUMP_VELOCITY,
+    DOUBLE_JUMP_VELOCITY, HIGH_JUMP_MULTIPLIER, MAX_FALL_SPEED,
+    COYOTE_TIME, BOUNCE_PLATFORM_MULTIPLIER, MAGNET_RADIUS, SCREEN_WIDTH,
 )
+
 
 class Player:
     def __init__(self, x, y):
@@ -65,8 +67,8 @@ class Player:
         if self.x < 0:
             self.x = 0
             self.vx = 0
-        elif self.x > 1280:
-            self.x = 1280
+        elif self.x > SCREEN_WIDTH:
+            self.x = SCREEN_WIDTH
             self.vx = 0
 
     def try_jump(self, sound, particles):
@@ -77,7 +79,6 @@ class Player:
         if self.powerups['high_jump'] > 0:
             jump_velocity *= HIGH_JUMP_MULTIPLIER
         if not self.on_ground and self.coyote_timer <= 0:
-            # use double jump and consume it
             self.powerups['double_jump'] = 0.0
             self.can_double_jump = False
         self.vy = jump_velocity

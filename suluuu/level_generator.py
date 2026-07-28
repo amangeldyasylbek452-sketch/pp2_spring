@@ -1,105 +1,57 @@
-"""
-platforms.py
-------------
-Platform + MovingPlatform classes. A single Platform can also be flagged as
-"bouncy" or "disappearing" - those are behavioural flags rather than
-separate subclasses, since they can combine (e.g. a moving+bouncy platform).
-MovingPlatform overrides update() to add horizontal oscillation.
-"""
+import random
 
-import math
-import pygame
-from constants import (
-    PLATFORM_COLOR, PLATFORM_EDGE, MOVING_PLATFORM_COLOR,
-    BOUNCY_PLATFORM_COLOR, DISAPPEARING_PLATFORM_COLOR, DISAPPEAR_TIME,
-    PLATFORM_HEIGHT,
-)
+from constants import SCREEN_WIDTH, SCREEN_HEIGHT, POWERUP_COLORS
+from collectables import Coin, PowerUp
+from platforms import MovingPlatform, Platform
 
 
-class Platform:
-    """A static platform the ball can stand on."""
+class LevelGenerator:
+    def __init__(self):
+        self.platforms = []
+        self.coins = []
+        self.powerups = []
+        self._generate_initial_layout()
 
-    def __init__(self, x, y, width, height=PLATFORM_HEIGHT,
-                 bouncy=False, disappearing=False):
-        self.x = x
-        self.y = y
-        self.width = width
-        self.height = height
-        self.bouncy = bouncy
-        self.disappearing = disappearing
-
-        self.standing_timer = 0.0     # counts up while player stands on it
-        self.is_gone = False          # once True, remove from world
-        self.shake_amount = 0.0       # visual warning wobble before vanish
-
-    @property
-    def rect(self):
-        return pygame.Rect(int(self.x), int(self.y), int(self.width), int(self.height))
-
-    def update(self, dt, player_on_it):
-        if self.disappearing and player_on_it and not self.is_gone:
-            self.standing_timer += dt
-            # start visibly shaking during the last 40% of its life
-            warn_start = DISAPPEAR_TIME * 0.6
-            if self.standing_timer > warn_start:
-                progress = (self.standing_timer - warn_start) / (DISAPPEAR_TIME - warn_start)
-                self.shake_amount = progress * 4
-            if self.standing_timer >= DISAPPEAR_TIME:
-                self.is_gone = True
-
-    def color(self):
-        if self.is_gone:
-            return PLATFORM_COLOR
-        if self.disappearing:
-            return DISAPPEARING_PLATFORM_COLOR
-        if self.bouncy:
-            return BOUNCY_PLATFORM_COLOR
-        return PLATFORM_COLOR
-
-    def draw(self, surface, cam_x, cam_y):
-        if self.is_gone:
-            return
-        import random
-        wobble_x = random.uniform(-self.shake_amount, self.shake_amount) if self.shake_amount else 0
-        rect = pygame.Rect(
-            int(self.x - cam_x + wobble_x), int(self.y - cam_y),
-            int(self.width), int(self.height),
+    def _generate_initial_layout(self):
+        floor = Platform(
+            SCREEN_WIDTH * 0.12,
+            SCREEN_HEIGHT - 50,
+            SCREEN_WIDTH * 0.76,
+            bouncy=False,
+            disappearing=False,
         )
-        pygame.draw.rect(surface, self.color(), rect, border_radius=6)
-        pygame.draw.rect(surface, PLATFORM_EDGE, rect, width=2, border_radius=6)
+        self.platforms.append(floor)
 
-        if self.bouncy:
-            # draw a little spring hint arrow on top
-            cx = rect.centerx
-            top = rect.top
-            pygame.draw.polygon(
-                surface, (255, 255, 255),
-                [(cx - 6, top + 3), (cx + 6, top + 3), (cx, top - 5)],
-            )
+        current_y = SCREEN_HEIGHT - 170
+        for index in range(28):
+            width = random.randint(140, 260)
+            x = random.randint(40, SCREEN_WIDTH - width - 40)
+            current_y -= random.randint(120, 165)
+            bouncy = (index % 7 == 0)
+            disappearing = (index % 6 == 0)
 
+            if index % 5 == 0:
+                platform = MovingPlatform(
+                    x, current_y, width, range_px=120, speed=1.1,
+                    bouncy=bouncy, disappearing=disappearing,
+                )
+            else:
+                platform = Platform(x, current_y, width,
+                                    bouncy=bouncy, disappearing=disappearing)
 
-class MovingPlatform(Platform):
-    """A platform that oscillates left / right between two x bounds."""
+            self.platforms.append(platform)
+            self._spawn_coin(platform)
+            self._spawn_powerup(platform)
 
-    def __init__(self, x, y, width, range_px, speed, height=PLATFORM_HEIGHT,
-                 bouncy=False, disappearing=False):
-        super().__init__(x, y, width, height, bouncy, disappearing)
-        self.origin_x = x
-        self.range_px = range_px
-        self.speed = speed
-        self.phase = 0.0
-        self.prev_x = x
-        self.delta_x = 0.0   # movement this frame, used to carry the player
+    def _spawn_coin(self, platform):
+        if random.random() < 0.64:
+            coin_x = platform.x + platform.width * 0.5
+            coin_y = platform.y - 30
+            self.coins.append(Coin(coin_x, coin_y))
 
-    def update(self, dt, player_on_it):
-        super().update(dt, player_on_it)
-        self.prev_x = self.x
-        self.phase += dt * self.speed
-        self.x = self.origin_x + math.sin(self.phase) * self.range_px
-        self.delta_x = self.x - self.prev_x
-
-    def color(self):
-        base = super().color()
-        if base == PLATFORM_COLOR:
-            return MOVING_PLATFORM_COLOR
-        return base
+    def _spawn_powerup(self, platform):
+        if random.random() < 0.14:
+            kind = random.choice(list(POWERUP_COLORS.keys()))
+            powerup_x = min(SCREEN_WIDTH - 40, max(40, platform.x + platform.width * 0.5))
+            powerup_y = platform.y - 42
+            self.powerups.append(PowerUp(powerup_x, powerup_y, kind))
