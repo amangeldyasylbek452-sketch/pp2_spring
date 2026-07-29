@@ -152,17 +152,18 @@ class Game:
         self.lava.update(dt, slow=slow_lava)
 
         if self.lava.check_death(self.player):
-            self._bounce_from_lava()
-            if self.player.lives <= 0:
-                self._end_run()
-                return
-            if self.player.lives <= 0:
-                self._end_run()
-                return
+            self.game_over_reason = "Lava"
+            self._end_run()
+            return
 
         self.camera.follow(self.player)
         self.camera.update(dt)
         self.particles.update(dt)
+
+        if self.player.y > self.camera.y + SCREEN_HEIGHT + self.player.radius:
+            self.game_over_reason = "Fell"
+            self._end_run()
+            return
 
         self.time_survived += dt
         height = max(0.0, self.start_y - self.player.y)
@@ -255,3 +256,6 @@ class Game:
         self.player.draw(self.screen, cam_x, cam_y)
         self.lava.draw(self.screen, cam_x, cam_y)
         self.particles.draw(self.screen, cam_x, cam_y)
+
+    def _end_run(self):
+        self.state = "game_over"

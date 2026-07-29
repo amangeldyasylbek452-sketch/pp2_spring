@@ -24,8 +24,9 @@ class Camera:
 
     def follow(self, player):
         # Keep the player roughly in the lower-middle third of the screen.
+        # Only move the camera upward when the player climbs higher.
         desired_y = player.y - SCREEN_HEIGHT * 0.55
-        self.target_y = desired_y
+        self.target_y = min(self.target_y, desired_y)
 
     def update(self, dt):
         self.y += (self.target_y - self.y) * min(1.0, self.smoothing * dt)
