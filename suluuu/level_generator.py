@@ -81,7 +81,12 @@ class LevelGenerator:
 
     def _spawn_powerup(self, platform):
         if random.random() < 0.14:
-            kind = random.choice(list(POWERUP_COLORS.keys()))
+            kinds = list(POWERUP_COLORS.keys())
+            if random.random() < 0.15:
+                kind = "extra_life"
+            else:
+                kinds.remove("extra_life")
+                kind = random.choice(kinds)
             powerup_x = min(SCREEN_WIDTH - 40, max(40, platform.x + platform.width * 0.5))
             powerup_y = platform.y - 42
             self.powerups.append(PowerUp(powerup_x, powerup_y, kind))

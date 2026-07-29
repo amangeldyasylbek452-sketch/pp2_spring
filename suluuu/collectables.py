@@ -79,6 +79,9 @@ class PowerUp:
         surface.blit(text, text_rect)
 
     def apply(self, player):
+        if self.kind == "extra_life":
+            player.add_life()
+            return True
         if self.kind == "shield":
             player.activate_powerup(self.kind, 0.0)
         else:

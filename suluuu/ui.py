@@ -140,13 +140,14 @@ class UI:
     # HUD (during gameplay)
     # ------------------------------------------------------------------
     def draw_hud(self, surface, height, time_survived, coins, high_score, combo, player):
-        panel_rect = pygame.Rect(10, 10, 250, 150)
+        panel_rect = pygame.Rect(10, 10, 250, 170)
         self.draw_panel(surface, panel_rect, alpha=150)
 
         lines = [
             f"Height: {int(height)}m",
             f"Time: {time_survived:0.1f}s",
             f"Coins: {coins}",
+            f"Lives: {player.lives}",
             f"High Score: {high_score}",
         ]
         for i, line in enumerate(lines):

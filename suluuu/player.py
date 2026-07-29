@@ -11,6 +11,7 @@ from constants import (
     MAX_MOVE_SPEED, FRICTION, AIR_FRICTION, JUMP_VELOCITY,
     DOUBLE_JUMP_VELOCITY, HIGH_JUMP_MULTIPLIER, MAX_FALL_SPEED,
     COYOTE_TIME, BOUNCE_PLATFORM_MULTIPLIER, MAGNET_RADIUS, SCREEN_WIDTH,
+    MAX_LIVES,
 )
 
 
@@ -27,6 +28,7 @@ class Player:
         self.jump_buffer = 0.0
         self.coyote_timer = 0.0
         self.max_height_y = y
+        self.lives = 3
         self.powerups = {
             'double_jump': 0.0,
             'slow_lava': 0.0,
@@ -64,11 +66,11 @@ class Player:
         self.x += self.vx * dt
         self.y += self.vy * dt
         self.max_height_y = min(self.max_height_y, self.y)
-        if self.x < 0:
-            self.x = 0
+        if self.x < self.radius:
+            self.x = self.radius
             self.vx = 0
-        elif self.x > SCREEN_WIDTH:
-            self.x = SCREEN_WIDTH
+        elif self.x > SCREEN_WIDTH - self.radius:
+            self.x = SCREEN_WIDTH - self.radius
             self.vx = 0
 
     def try_jump(self, sound, particles):
@@ -103,6 +105,9 @@ class Player:
             return True
         return False
 
+    def add_life(self):
+        self.lives = min(MAX_LIVES, self.lives + 1)
+
     def apply_magnet(self, coins, dt):
         if self.powerups['magnet'] <= 0:
             return
@@ -121,22 +126,57 @@ class Player:
         landed = None
         self.on_ground = False
         self.coyote_timer = max(0.0, self.coyote_timer)
+        player_rect = pygame.Rect(
+            int(self.x - self.radius),
+            int(self.y - self.radius),
+            int(self.radius * 2),
+            int(self.radius * 2),
+        )
         for platform in platforms:
             if platform.is_gone:
                 continue
             rect = pygame.Rect(platform.x, platform.y, platform.width, platform.height)
-            if rect.collidepoint(self.x, self.y + self.radius) and self.vy >= 0:
-                if self.y + self.radius <= platform.y + 12:
-                    self.y = platform.y - self.radius
-                    self.vy = 0.0
-                    self.on_ground = True
-                    self.coyote_timer = COYOTE_TIME
-                    landed = platform
-                    if platform.bouncy:
-                        self.vy = JUMP_VELOCITY * BOUNCE_PLATFORM_MULTIPLIER
-                        if sound:
-                            sound.play('jump')
-                    break
+            if not player_rect.colliderect(rect):
+                continue
+
+            vertical_overlap = min(player_rect.bottom, rect.bottom) - max(player_rect.top, rect.top)
+            horizontal_overlap = min(player_rect.right, rect.right) - max(player_rect.left, rect.left)
+
+            if self.vy > 0 and self.y + self.radius <= platform.y + 12:
+                self.y = platform.y - self.radius
+                self.vy = 0.0
+                self.on_ground = True
+                self.coyote_timer = COYOTE_TIME
+                landed = platform
+                if platform.bouncy:
+                    self.vy = JUMP_VELOCITY * BOUNCE_PLATFORM_MULTIPLIER
+                    if sound:
+                        sound.play('jump')
+                break
+            if self.vy < 0 and self.y - self.radius >= platform.y + platform.height - 12:
+                self.y = platform.y + platform.height + self.radius
+                self.vy = 0.0
+                break
+            if horizontal_overlap < vertical_overlap:
+                if player_rect.centerx < rect.centerx:
+                    self.x = platform.x - self.radius
+                else:
+                    self.x = platform.x + platform.width + self.radius
+                self.vx = 0
+                player_rect.x = int(self.x - self.radius)
+                continue
+
+            if self.vy >= 0:
+                self.y = platform.y - self.radius
+                self.vy = 0.0
+                self.on_ground = True
+                self.coyote_timer = COYOTE_TIME
+                landed = platform
+                if platform.bouncy:
+                    self.vy = JUMP_VELOCITY * BOUNCE_PLATFORM_MULTIPLIER
+                    if sound:
+                        sound.play('jump')
+                break
         return landed, self.on_ground
 
     def draw(self, surface, cam_x, cam_y):

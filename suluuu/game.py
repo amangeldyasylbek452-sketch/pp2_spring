@@ -153,6 +153,12 @@ class Game:
 
         if self.lava.check_death(self.player):
             self._bounce_from_lava()
+            if self.player.lives <= 0:
+                self._end_run()
+                return
+            if self.player.lives <= 0:
+                self._end_run()
+                return
 
         self.camera.follow(self.player)
         self.camera.update(dt)
@@ -190,10 +196,11 @@ class Game:
                 self.powerups_collected += 1
 
     def _bounce_from_lava(self):
+        if not self.player.consume_shield():
+            self.player.lives = max(0, self.player.lives - 1)
         self.player.y = self.lava.y - self.player.radius - 8
         self.player.vy = JUMP_VELOCITY * 0.8
         self.player.on_ground = False
-        self.player.powerups['shield'] = max(self.player.powerups['shield'], 1)
         self.particles.lava_death_burst(self.player.x, self.player.y + self.player.radius)
         self.sound.play('jump')
 

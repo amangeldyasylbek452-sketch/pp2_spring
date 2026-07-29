@@ -25,8 +25,7 @@ class Camera:
     def follow(self, player):
         # Keep the player roughly in the lower-middle third of the screen.
         desired_y = player.y - SCREEN_HEIGHT * 0.55
-        if desired_y < self.target_y:
-            self.target_y = desired_y
+        self.target_y = desired_y
 
     def update(self, dt):
         self.y += (self.target_y - self.y) * min(1.0, self.smoothing * dt)

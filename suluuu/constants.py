@@ -11,7 +11,7 @@ BALL_RADIUS = 18
 BALL_COLOR = (255, 130, 60)
 BALL_OUTLINE = (245, 245, 245)
 
-GRAVITY = 900.0
+GRAVITY = 700.0
 MOVE_ACCEL = 3800.0
 MAX_MOVE_SPEED = 520.0
 FRICTION = 5200.0
@@ -42,7 +42,10 @@ POWERUP_COLORS = {
     "high_jump": (200, 140, 255),
     "shield": (135, 255, 210),
     "magnet": (250, 250, 120),
+    "extra_life": (255, 100, 140),
 }
+
+MAX_LIVES = 5
 
 SKY_TOP = (25, 28, 62)
 SKY_BOTTOM = (35, 60, 115)
