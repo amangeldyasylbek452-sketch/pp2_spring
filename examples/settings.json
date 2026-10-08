@@ -1,0 +1,99 @@
+"""systems/ai.py — reusable finite-state-machine AI for enemies and bosses.
+
+States: idle -> patrol -> investigate -> chase -> attack -> stagger -> retreat
+-> search -> dead. Bosses subclass EnemyFSM and add phase-based transitions.
+"""
+from __future__ import annotations
+import math
+import random
+
+
+class EnemyFSM:
+    def __init__(self, owner) -> None:
+        self.owner = owner
+        self.state = "idle"
+        self.timer = 0.0
+        self.state_time = 0.0
+        self.last_known_player_x = None
+        self.investigate_target = None
+
+    def change(self, new_state: str) -> None:
+        if new_state != self.state:
+            self.state = new_state
+            self.state_time = 0.0
+
+    def distance_to_player(self) -> float:
+        px, py = self.owner.game.player.pos
+        ex, ey = self.owner.pos
+        return math.hypot(px - ex, py - ey)
+
+    def can_see_player(self) -> bool:
+        return self.distance_to_player() < self.owner.sight_range
+
+    def update(self, dt: float) -> None:
+        self.state_time += dt
+        handler = getattr(self, f"_state_{self.state}", None)
+        if handler:
+            handler(dt)
+
+    # ---------------------------------------------------------- states
+    def _state_idle(self, dt):
+        if self.can_see_player():
+            self.change("chase")
+        elif self.state_time > random.uniform(2.0, 4.0):
+            self.change("patrol")
+
+    def _state_patrol(self, dt):
+        self.owner.move_patrol(dt)
+        if self.can_see_player():
+            self.change("chase")
+        elif self.state_time > random.uniform(3.0, 5.0):
+            self.change("idle")
+
+    def _state_investigate(self, dt):
+        self.owner.move_toward(self.investigate_target, dt, speed_mult=0.6)
+        if self.can_see_player():
+            self.change("chase")
+        elif self.state_time > 2.5:
+            self.change("search")
+
+    def _state_chase(self, dt):
+        px, _ = self.owner.game.player.pos
+        self.last_known_player_x = px
+        dist = self.distance_to_player()
+        if dist < self.owner.attack_range:
+            self.change("attack")
+            return
+        if not self.can_see_player() and self.state_time > 0.4:
+            self.change("search")
+            return
+        self.owner.move_toward(self.owner.game.player.pos, dt, speed_mult=1.0)
+
+    def _state_attack(self, dt):
+        self.owner.perform_attack(dt)
+        if self.owner.attack_finished:
+            if self.distance_to_player() > self.owner.attack_range * 1.4:
+                self.change("chase")
+            else:
+                self.change("chase" if random.random() > 0.3 else "attack")
+
+    def _state_stagger(self, dt):
+        if self.state_time > self.owner.stagger_duration:
+            self.change("chase" if self.can_see_player() else "search")
+
+    def _state_search(self, dt):
+        if self.last_known_player_x is not None:
+            target = (self.last_known_player_x, self.owner.pos[1])
+            self.owner.move_toward(target, dt, speed_mult=0.5)
+        if self.can_see_player():
+            self.change("chase")
+        elif self.state_time > 3.0:
+            self.change("idle")
+
+    def _state_retreat(self, dt):
+        self.owner.move_away_from_player(dt)
+        if self.state_time > 1.2:
+            self.change("chase")
+
+    def _state_dead(self, dt):
+        pass

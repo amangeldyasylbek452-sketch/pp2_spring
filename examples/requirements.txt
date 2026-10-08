@@ -1,0 +1,86 @@
+"""ui/hud.py — in-game heads-up display: bars, boss health, hotbar, prompts, quest tracker."""
+from __future__ import annotations
+import pygame
+from core import settings as S
+
+
+class HUD:
+    def __init__(self, game) -> None:
+        self.game = game
+        self.font = pygame.font.SysFont("consolas", 16, bold=True)
+        self.font_small = pygame.font.SysFont("consolas", 13)
+        self.font_title = pygame.font.SysFont("georgia", 22, bold=True)
+        self.interact_prompt = None
+        self.quest_text = "Find the Old Hunter and learn of the Skeleton Captain."
+        self.notification = None
+        self.notification_timer = 0.0
+
+    def notify(self, text: str, duration=2.5):
+        self.notification = text
+        self.notification_timer = duration
+
+    def _bar(self, surf, x, y, w, h, ratio, color, bg=(30, 24, 24)):
+        pygame.draw.rect(surf, bg, (x, y, w, h))
+        pygame.draw.rect(surf, color, (x, y, int(w * max(0, min(1, ratio))), h))
+        pygame.draw.rect(surf, S.UI_BORDER, (x, y, w, h), 2)
+
+    def draw(self, surf: pygame.Surface, dt: float) -> None:
+        p = self.game.player
+        # health
+        self._bar(surf, 20, 20, 220, 18, p.health / p.effective_max_health(), S.HEALTH_RED)
+        surf.blit(self.font_small.render(f"HP {int(p.health)}/{p.effective_max_health()}", True, S.WHITE), (26, 22))
+        # stamina
+        self._bar(surf, 20, 44, 180, 12, p.stamina / p.effective_max_stamina(), S.STAMINA_GREEN)
+        # mana
+        self._bar(surf, 20, 60, 140, 10, p.mana / p.max_mana, S.MANA_BLUE)
+
+        # gold / relics
+        gold_txt = self.font_small.render(f"Gold: {self.game.inventory.gold}", True, S.UI_GOLD)
+        surf.blit(gold_txt, (20, 78))
+        relic_txt = self.font_small.render(f"Relics: {len(self.game.inventory.relics_found)}", True, (200, 160, 230))
+        surf.blit(relic_txt, (140, 78))
+
+        # boss bar
+        boss = getattr(self.game.level, "boss", None)
+        if boss and boss.alive:
+            bw = 500
+            bx = S.SCREEN_W / 2 - bw / 2
+            self._bar(surf, bx, 26, bw, 16, boss.health / boss.max_health, S.BOSS_RED)
+            name_surf = self.font.render(boss.name, True, S.WHITE)
+            surf.blit(name_surf, (bx + bw / 2 - name_surf.get_width() / 2, 6))
+
+        # quest tracker
+        panel = pygame.Surface((300, 50), pygame.SRCALPHA)
+        pygame.draw.rect(panel, (20, 16, 24, 190), (0, 0, 300, 50), border_radius=6)
+        pygame.draw.rect(panel, S.UI_BORDER, (0, 0, 300, 50), 2, border_radius=6)
+        panel.blit(self.font_small.render("Quest:", True, S.UI_GOLD), (8, 6))
+        panel.blit(self.font_small.render(self.quest_text[:44], True, S.WHITE), (8, 24))
+        surf.blit(panel, (S.SCREEN_W - 320, 20))
+
+        # interaction prompt
+        if self.interact_prompt:
+            txt = self.font.render(self.interact_prompt, True, S.WHITE)
+            bg = pygame.Rect(0, 0, txt.get_width() + 20, 30)
+            bg.center = (S.SCREEN_W // 2, S.SCREEN_H - 90)
+            pygame.draw.rect(surf, (20, 16, 24, 200), bg, border_radius=6)
+            pygame.draw.rect(surf, S.UI_BORDER, bg, 2, border_radius=6)
+            surf.blit(txt, (bg.x + 10, bg.y + 5))
+
+        # notification
+        if self.notification_timer > 0:
+            self.notification_timer -= dt
+            alpha = min(255, int(255 * min(1.0, self.notification_timer)))
+            txt = self.font_title.render(self.notification, True, S.UI_GOLD)
+            txt.set_alpha(alpha)
+            surf.blit(txt, (S.SCREEN_W // 2 - txt.get_width() // 2, 110))
+
+        if self.game.debug:
+            fps_txt = self.font_small.render(f"FPS: {int(self.game.clock.get_fps())}", True, (140, 220, 140))
+            surf.blit(fps_txt, (S.SCREEN_W - 100, S.SCREEN_H - 24))
+
+    def draw_low_health_vignette(self, surf, ratio):
+        if ratio < 0.3:
+            alpha = int((0.3 - ratio) / 0.3 * 160)
+            overlay = pygame.Surface((S.SCREEN_W, S.SCREEN_H), pygame.SRCALPHA)
+            pygame.draw.rect(overlay, (140, 0, 0, alpha), (0, 0, S.SCREEN_W, S.SCREEN_H), 40)
+            surf.blit(overlay, (0, 0))

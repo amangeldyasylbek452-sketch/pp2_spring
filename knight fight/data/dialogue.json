@@ -1,0 +1,13 @@
+{
+  "queen": {
+    "intro": "The kingdom has fallen, but hope still lives in your heart.",
+    "mid": "The relics must be gathered before the seal breaks entirely.",
+    "end": "The curse is finally broken. The dawn has returned."
+  },
+  "priest": {
+    "intro": "The dead walk where the living once prayed."
+  },
+  "merchant": {
+    "intro": "I have a few supplies left, if you can pay in gold."
+  }
+}

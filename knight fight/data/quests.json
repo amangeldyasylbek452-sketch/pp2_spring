@@ -1,0 +1,22 @@
+{
+  "quests": [
+    {
+      "id": "intro",
+      "title": "The Last Knight",
+      "description": "Recover the first relic and reach the portal.",
+      "completed": true
+    },
+    {
+      "id": "souls",
+      "title": "Free the Souls",
+      "description": "Rescue trapped souls and weaken the curse.",
+      "completed": false
+    },
+    {
+      "id": "dragon",
+      "title": "The Dragon King's Fall",
+      "description": "Defeat the Dragon King and rescue the Queen.",
+      "completed": false
+    }
+  ]
+}

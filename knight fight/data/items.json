@@ -1,0 +1,32 @@
+{
+  "items": [
+    {
+      "id": "sword",
+      "name": "Iron Sword",
+      "description": "A dependable blade.",
+      "rarity": "common",
+      "type": "weapon"
+    },
+    {
+      "id": "shield",
+      "name": "Oak Shield",
+      "description": "A sturdy shield for blocking.",
+      "rarity": "common",
+      "type": "shield"
+    },
+    {
+      "id": "potion",
+      "name": "Healing Potion",
+      "description": "Restores a portion of health.",
+      "rarity": "common",
+      "type": "consumable"
+    },
+    {
+      "id": "relic",
+      "name": "Sacred Relic",
+      "description": "A fragment of the shattered crystal.",
+      "rarity": "rare",
+      "type": "quest"
+    }
+  ]
+}

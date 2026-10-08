@@ -1,8 +1,32 @@
 [
     {
+        "name": "batyrzhan",
+        "score": 1521,
+        "distance": 1354,
+        "coins": 26
+    },
+    {
+        "name": "фы",
+        "score": 706,
+        "distance": 519,
+        "coins": 11
+    },
+    {
         "name": "as",
         "score": 551,
         "distance": 481,
         "coins": 7
+    },
+    {
+        "name": "aisultan",
+        "score": 462,
+        "distance": 329,
+        "coins": 5
+    },
+    {
+        "name": "aisultan",
+        "score": 234,
+        "distance": 171,
+        "coins": 2
     }
 ]
